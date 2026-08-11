@@ -49,7 +49,6 @@ src/
   index.ts              # entrypoint: creates MCP server, registers tools, starts HTTP transport
   config.ts             # env var parsing/validation (fails fast on missing required vars)
   dockhandClient.ts      # thin fetch wrapper: base URL + Bearer header + error normalization
-  sse.ts                 # consumes Dockhand's SSE "job" endpoints, resolves to a final result
   auth.ts                 # inbound MCP_AUTH_TOKEN check middleware
   tools/
     environments.ts       # list_environments
@@ -86,17 +85,19 @@ Mutating (omitted entirely when `DOCKHAND_MCP_READONLY=true`):
 - `stop_container` → `POST /api/containers/:id/stop?env=`
 - `restart_container` → `POST /api/containers/:id/restart?env=`
 - `remove_container` → `DELETE /api/containers/:id?env=&force=`
-- `pull_image` → `POST /api/images/pull?env=`
+- `pull_image` → `POST /api/images/pull?env=` (job endpoint — see below)
 - `remove_image` → `DELETE /api/images/:id?env=`
 - `remove_volume` → `DELETE /api/volumes/:name?env=`
-- `deploy_stack` → `POST /api/stacks/:name/deploy?env=` (SSE job — see below)
-- `stop_stack` → `POST /api/stacks/:name/down?env=` (SSE job — see below)
+- `deploy_stack` → `POST /api/stacks/:name/deploy?env=` (job endpoint — see below)
+- `stop_stack` → `POST /api/stacks/:name/down?env=` (job endpoint — see below)
 
-## SSE job handling
+## Job endpoint handling
 
-Stack deploy/down (and potentially other future job-style endpoints) use Dockhand's `createJobResponse` SSE pattern: the HTTP response is a stream of `progress` events followed by a final `result` event, rather than a single JSON body like container/image endpoints return.
+Image pull and stack deploy/down are long-running operations backed by Dockhand's `createJobResponse` helper (`src/lib/server/sse.ts`). Its behavior depends on the caller's `Accept` header:
+- If `Accept: application/json` is sent *without* `text/event-stream`, `createJobResponse` runs the operation and returns the final `result` payload as a single plain JSON body once it completes — no streaming client needed.
+- Otherwise, it returns `{ jobId }` immediately and the operation continues in the background (SSE/polling clients only).
 
-`sse.ts` provides a helper that opens the request, consumes the event stream server-side, discards intermediate `progress` events (or optionally surfaces the last one on error), and resolves once the `result` event arrives — returning a plain object to the calling tool. This keeps every MCP tool response uniform (plain JSON content) regardless of which response style the underlying Dockhand endpoint uses.
+Because `dockhandClient.ts` always sends `Accept: application/json` on every request, job endpoints behave identically to every other JSON endpoint from the sidecar's point of view — a normal `await fetch(...).json()` blocks until the job's final result is ready. No separate SSE-consuming module is needed.
 
 ## Error handling
 
