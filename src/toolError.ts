@@ -1,9 +1,7 @@
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { DockhandError } from './dockhandClient.js';
 
-export interface McpToolResult {
-  content: Array<{ type: 'text'; text: string }>;
-  isError?: boolean;
-}
+export type McpToolResult = CallToolResult;
 
 export function toErrorResult(error: unknown): McpToolResult {
   let text: string;
