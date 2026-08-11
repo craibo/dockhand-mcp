@@ -56,4 +56,47 @@ describe('loadConfig', () => {
     const env = { ...baseEnv, DOCKHAND_API_TOKEN_FILE: '/run/secrets/token' };
     expect(() => loadConfig(env as NodeJS.ProcessEnv)).toThrow(ConfigError);
   });
+
+  it('throws ConfigError when PORT is non-numeric', () => {
+    const env = { ...baseEnv, PORT: 'abc' };
+    expect(() => loadConfig(env as NodeJS.ProcessEnv)).toThrow(ConfigError);
+  });
+
+  it('throws ConfigError when PORT has trailing non-numeric content', () => {
+    const env = { ...baseEnv, PORT: '80abc' };
+    expect(() => loadConfig(env as NodeJS.ProcessEnv)).toThrow(ConfigError);
+  });
+
+  it('accepts a valid numeric PORT', () => {
+    const config = loadConfig({ ...baseEnv, PORT: '9000' } as NodeJS.ProcessEnv);
+    expect(config.port).toBe(9000);
+  });
+
+  it('throws ConfigError (not the raw error) when DOCKHAND_API_TOKEN_FILE cannot be read', () => {
+    const readFileSync = vi.fn().mockImplementation(() => {
+      throw new Error('ENOENT: no such file or directory');
+    });
+    const env = { ...baseEnv, DOCKHAND_API_TOKEN: undefined, DOCKHAND_API_TOKEN_FILE: '/run/secrets/missing' };
+    expect(() => loadConfig(env as unknown as NodeJS.ProcessEnv, readFileSync)).toThrow(ConfigError);
+  });
+
+  it('treats an empty MCP_ALLOWED_HOSTS as unset', () => {
+    const config = loadConfig({ ...baseEnv, MCP_ALLOWED_HOSTS: '' } as NodeJS.ProcessEnv);
+    expect(config.allowedHosts).toBeUndefined();
+  });
+
+  it('treats a whitespace-only MCP_ALLOWED_HOSTS as unset', () => {
+    const config = loadConfig({ ...baseEnv, MCP_ALLOWED_HOSTS: '   ' } as NodeJS.ProcessEnv);
+    expect(config.allowedHosts).toBeUndefined();
+  });
+
+  it('filters out empty entries from MCP_ALLOWED_HOSTS', () => {
+    const config = loadConfig({ ...baseEnv, MCP_ALLOWED_HOSTS: 'host1,,host2' } as NodeJS.ProcessEnv);
+    expect(config.allowedHosts).toEqual(['host1', 'host2']);
+  });
+
+  it('parses a normal MCP_ALLOWED_HOSTS list', () => {
+    const config = loadConfig({ ...baseEnv, MCP_ALLOWED_HOSTS: 'host1,host2' } as NodeJS.ProcessEnv);
+    expect(config.allowedHosts).toEqual(['host1', 'host2']);
+  });
 });

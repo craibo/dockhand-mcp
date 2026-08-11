@@ -102,4 +102,27 @@ describe('DockhandClient', () => {
     const result = await client.del('/api/containers/abc', { env: 1, force: true });
     expect(result).toEqual({ success: true });
   });
+
+  it('preserves a subpath base URL when joining with an absolute path', async () => {
+    const subpathClient = createDockhandClient({
+      dockhandUrl: 'http://dockhand:3000/api-proxy',
+      dockhandApiToken: 'dh_test'
+    });
+    let seenUrl = '';
+    server.use(
+      http.get('http://dockhand:3000/api-proxy/api/containers', ({ request }) => {
+        seenUrl = request.url;
+        return HttpResponse.json([]);
+      })
+    );
+    await subpathClient.get('/api/containers');
+    expect(seenUrl).toBe('http://dockhand:3000/api-proxy/api/containers');
+  });
+
+  it('resolves without throwing on an empty 200 response body', async () => {
+    server.use(
+      http.get('http://dockhand:3000/api/containers/abc/logs', () => new HttpResponse('', { status: 200 }))
+    );
+    await expect(client.get('/api/containers/abc/logs')).resolves.not.toThrow();
+  });
 });

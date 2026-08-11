@@ -21,7 +21,9 @@ export interface DockhandClient {
 type QueryParams = Record<string, string | number | boolean | undefined>;
 
 function buildUrl(baseUrl: string, path: string, params?: QueryParams): string {
-  const url = new URL(path, baseUrl);
+  const base = baseUrl.replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const url = new URL(`${base}${normalizedPath}`);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) {
@@ -63,7 +65,11 @@ export function createDockhandClient(config: { dockhandUrl: string; dockhandApiT
       throw new DockhandError(response.status, message, details);
     }
 
-    return (await response.json()) as T;
+    const text = await response.text();
+    if (text.length === 0) {
+      return undefined as T;
+    }
+    return JSON.parse(text) as T;
   }
 
   return {

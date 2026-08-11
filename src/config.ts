@@ -38,16 +38,42 @@ export function loadConfig(
     );
   }
 
-  const dockhandApiToken = hasToken
-    ? (env.DOCKHAND_API_TOKEN as string)
-    : readFileSync(env.DOCKHAND_API_TOKEN_FILE as string, 'utf-8').trim();
+  let dockhandApiToken: string;
+  if (hasToken) {
+    dockhandApiToken = env.DOCKHAND_API_TOKEN as string;
+  } else {
+    const tokenFilePath = env.DOCKHAND_API_TOKEN_FILE as string;
+    try {
+      dockhandApiToken = readFileSync(tokenFilePath, 'utf-8').trim();
+    } catch (err) {
+      const originalMessage = err instanceof Error ? err.message : String(err);
+      throw new ConfigError(
+        `Could not read DOCKHAND_API_TOKEN_FILE at "${tokenFilePath}": ${originalMessage}`
+      );
+    }
+  }
+
+  let port = 8787;
+  if (env.PORT) {
+    const parsedPort = Number(env.PORT);
+    if (!Number.isInteger(parsedPort) || parsedPort <= 0 || parsedPort > 65535) {
+      throw new ConfigError(`PORT must be a positive integer between 1 and 65535, got "${env.PORT}"`);
+    }
+    port = parsedPort;
+  }
+
+  const allowedHosts = env.MCP_ALLOWED_HOSTS
+    ?.split(',')
+    .map((h) => h.trim())
+    .filter((h) => h.length > 0);
+  const resolvedAllowedHosts = allowedHosts && allowedHosts.length > 0 ? allowedHosts : undefined;
 
   return {
     dockhandUrl,
     dockhandApiToken,
     mcpAuthToken,
     readonly: env.DOCKHAND_MCP_READONLY === 'true',
-    port: env.PORT ? parseInt(env.PORT, 10) : 8787,
-    allowedHosts: env.MCP_ALLOWED_HOSTS?.split(',').map((h) => h.trim())
+    port,
+    allowedHosts: resolvedAllowedHosts
   };
 }
