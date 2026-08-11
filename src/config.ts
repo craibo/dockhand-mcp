@@ -6,6 +6,7 @@ export interface Config {
   mcpAuthToken: string;
   readonly: boolean;
   port: number;
+  allowedHosts?: string[];
 }
 
 export class ConfigError extends Error {
@@ -46,6 +47,7 @@ export function loadConfig(
     dockhandApiToken,
     mcpAuthToken,
     readonly: env.DOCKHAND_MCP_READONLY === 'true',
-    port: env.PORT ? parseInt(env.PORT, 10) : 8787
+    port: env.PORT ? parseInt(env.PORT, 10) : 8787,
+    allowedHosts: env.MCP_ALLOWED_HOSTS?.split(',').map((h) => h.trim())
   };
 }
