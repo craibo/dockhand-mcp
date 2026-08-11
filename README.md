@@ -1,6 +1,6 @@
 # dockhand-mcp
 
-MCP (Model Context Protocol) sidecar server for [Dockhand](https://dockhand.pro). Exposes Dockhand's container, image, volume, network, and stack management as MCP tools over Streamable HTTP, so MCP clients (Claude Desktop, Claude Code, etc.) can manage Docker resources through Dockhand.
+MCP (Model Context Protocol) sidecar server for [Dockhand](https://dockhand.pro) ([GitHub](https://github.com/Finsys/dockhand)). Exposes Dockhand's container, image, volume, network, and stack management as MCP tools over Streamable HTTP, so MCP clients (Claude Desktop, Claude Code, etc.) can manage Docker resources through Dockhand.
 
 This is a standalone service — it does not modify Dockhand itself, and calls Dockhand's existing REST API using a Dockhand API token.
 
