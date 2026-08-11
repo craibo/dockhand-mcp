@@ -44,4 +44,12 @@ describe('requireMcpAuthToken', () => {
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(401);
   });
+
+  it('responds 401 when the header has trailing content after the token', () => {
+    const middleware = requireMcpAuthToken('secret123');
+    const { req, res, next } = makeReqRes('Bearer secret123 extra-garbage');
+    middleware(req, res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(401);
+  });
 });
