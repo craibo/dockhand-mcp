@@ -1,0 +1,29 @@
+services:
+  dockhand:
+    image: fnsys/dockhand:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+
+  dockhand-mcp:
+    build: .
+    depends_on:
+      - dockhand
+    environment:
+      DOCKHAND_URL: http://dockhand:3000
+      DOCKHAND_API_TOKEN_FILE: /run/secrets/dockhand_api_token
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN}
+      DOCKHAND_MCP_READONLY: "false"
+    secrets:
+      - dockhand_api_token
+    ports:
+      - "8787:8787"
+
+volumes:
+  dockhand_data:
+
+secrets:
+  dockhand_api_token:
+    file: ./dockhand_api_token.txt
