@@ -73,22 +73,61 @@ claude mcp add dockhand-mcp --transport http https://dockhand-mcp.example.com/mc
 
 Every tool except `list_environments`, `list_users`, `get_user`, `list_roles`, `list_registries`, and `list_schedules` requires an `environmentId` (or an id scoped to a specific stored resource) — call `list_environments` first to discover valid environment IDs.
 
-### Core (always registered)
+Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardless of the domain toggle below.
 
-Read-only: `list_environments`, `list_containers`, `get_container`, `get_container_logs`, `list_images`, `list_volumes`, `list_networks`, `list_stacks`
+### Core (always registered — no toggle required)
 
-Mutating (disabled when `DOCKHAND_MCP_READONLY=true`): `start_container`, `stop_container`, `restart_container`, `remove_container`, `pull_image`, `remove_image`, `remove_volume`, `deploy_stack`, `stop_stack`
+| Tool | Type | Description |
+|---|---|---|
+| `list_environments` | Read-only | List all Dockhand environments (Docker hosts). Call this first to discover valid `environmentId` values for other tools. |
+| `list_containers` | Read-only | List containers in a Dockhand environment. |
+| `get_container` | Read-only | Get full inspect details for a single container. |
+| `get_container_logs` | Read-only | Get recent logs for a container. |
+| `list_images` | Read-only | List images in a Dockhand environment. |
+| `list_volumes` | Read-only | List volumes in a Dockhand environment. |
+| `list_networks` | Read-only | List networks in a Dockhand environment. |
+| `list_stacks` | Read-only | List Compose stacks in a Dockhand environment. |
+| `start_container` | Mutating | Start a stopped container. |
+| `stop_container` | Mutating | Stop a running container. |
+| `restart_container` | Mutating | Restart a container. |
+| `remove_container` | Mutating | Remove (delete) a container. |
+| `pull_image` | Mutating | Pull an image from a registry. Blocks until the pull completes or fails. |
+| `remove_image` | Mutating | Remove (delete) an image. |
+| `remove_volume` | Mutating | Remove (delete) a volume. |
+| `deploy_stack` | Mutating | Deploy (up) a Compose stack. Blocks until the deploy completes or fails. |
+| `stop_stack` | Mutating | Stop (down) a Compose stack. Blocks until it completes or fails. |
 
-### Extended (each domain disabled by default — see Configuration table above)
+### Extended (each domain off by default — set its toggle to `true` to enable)
 
-| Domain | Toggle | Read-only tools | Mutating tools (also disabled when `DOCKHAND_MCP_READONLY=true`) |
-|---|---|---|---|
-| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | `list_backup_configs`, `list_snapshots` | `run_backup_config` |
-| Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | `list_users`, `get_user`, `list_roles` | — |
-| Registries | `DOCKHAND_MCP_ENABLE_REGISTRIES` | `list_registries` | — |
-| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | `list_vulnerabilities` | `scan_all_vulnerabilities` |
-| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | `list_git_stacks` | `sync_git_stack`, `deploy_git_stack` |
-| Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | `list_schedules` | `run_schedule`, `toggle_schedule` |
+| Domain | Toggle | Status | Tool | Type | Description |
+|---|---|---|---|---|---|
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `list_backup_configs` | Read-only | List configured backups (stack or volume backup jobs) in Dockhand. |
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `list_snapshots` | Read-only | List backup snapshots, optionally scoped to a single backup config. |
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `run_backup_config` | Mutating | Manually trigger a backup config to run now. Blocks until the backup completes or fails. |
+| Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `list_users` | Read-only | List all Dockhand users. |
+| Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `get_user` | Read-only | Get details for a single Dockhand user. |
+| Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `list_roles` | Read-only | List all Dockhand roles. Requires an Enterprise license (returns an error on free-tier instances with auth enabled). |
+| Registries | `DOCKHAND_MCP_ENABLE_REGISTRIES` | disabled by default | `list_registries` | Read-only | List configured container registries in Dockhand. Credentials are never included — only a `hasCredentials` flag. |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `list_vulnerabilities` | Read-only | List aggregated vulnerability findings for an environment, with optional filtering and pagination. |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `scan_all_vulnerabilities` | Mutating | Scan every image in an environment for vulnerabilities. Blocks until the batch scan completes. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `list_git_stacks` | Read-only | List git-backed Compose stacks in Dockhand. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `sync_git_stack` | Mutating | Pull the latest commit for a git-backed stack from its remote, without redeploying. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `deploy_git_stack` | Mutating | Sync and redeploy a git-backed stack. Blocks until the deploy completes or fails. Check the `success` field in the result — a failed deploy is reported as a normal result, not a tool error. |
+| Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `list_schedules` | Read-only | List all active Dockhand schedules (container auto-updates, git stack syncs, backups, and system jobs). |
+| Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `run_schedule` | Mutating | Manually trigger a schedule to run now. |
+| Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `toggle_schedule` | Mutating | Enable or disable a schedule. Flips its current enabled state — check the returned `enabled` field to see the new state. |
+
+To enable a domain, set its toggle to `true` in the sidecar's environment (see [Configuration](#configuration)), e.g.:
+
+```bash
+docker run -p 8787:8787 \
+  -e DOCKHAND_URL=http://dockhand:3000 \
+  -e DOCKHAND_API_TOKEN=dh_... \
+  -e MCP_AUTH_TOKEN=... \
+  -e DOCKHAND_MCP_ENABLE_BACKUPS=true \
+  -e DOCKHAND_MCP_ENABLE_GIT=true \
+  dockhand-mcp
+```
 
 These six domains intentionally wrap only a minimal slice of Dockhand's REST surface for each area (no user/role/registry/git-credential CRUD) — full CRUD for these domains is out of scope, consistent with the project's minimal, LLM-friendly tool surface.
 
