@@ -16,7 +16,7 @@ import { registerGitTools } from './tools/git.js';
 import { registerScheduleTools } from './tools/schedules.js';
 
 export function buildServer(client: DockhandClient, config: Config): McpServer {
-  const server = new McpServer({ name: 'dockhand-mcp', version: '0.2.2' });
+  const server = new McpServer({ name: 'dockhand-mcp', version: '0.2.3' });
 
   registerEnvironmentTools(server, client);
   registerContainerTools(server, client, config.readonly);

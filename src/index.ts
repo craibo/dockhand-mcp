@@ -3,13 +3,15 @@ import { loadConfig, ConfigError } from './config.js';
 import { createApp } from './app.js';
 import { createDockhandClient } from './dockhandClient.js';
 import { checkDockhandConnectivity } from './startupCheck.js';
+import { logStartupSummary } from './startupSummary.js';
 
 try {
   const config = loadConfig(process.env);
 
   console.log(`Connecting to Dockhand at ${config.dockhandUrl} ...`);
   const client = createDockhandClient(config);
-  await checkDockhandConnectivity(client, { log: console.log, error: console.error });
+  const connectivity = await checkDockhandConnectivity(client, { log: console.log, error: console.error });
+  logStartupSummary(config, connectivity.ok, { log: console.log });
 
   const app = createApp(config);
   app.listen(config.port, () => {
