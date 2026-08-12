@@ -16,6 +16,12 @@ services:
       DOCKHAND_API_TOKEN_FILE: /run/secrets/dockhand_api_token
       MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN}
       DOCKHAND_MCP_READONLY: "false"
+      # DOCKHAND_MCP_ENABLE_BACKUPS: "true"
+      # DOCKHAND_MCP_ENABLE_USERS: "true"
+      # DOCKHAND_MCP_ENABLE_REGISTRIES: "true"
+      # DOCKHAND_MCP_ENABLE_VULNERABILITIES: "true"
+      # DOCKHAND_MCP_ENABLE_GIT: "true"
+      # DOCKHAND_MCP_ENABLE_SCHEDULES: "true"
     secrets:
       - dockhand_api_token
     ports:
