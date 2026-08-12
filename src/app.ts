@@ -12,7 +12,7 @@ export function createApp(config: Config): Express {
   const client = createDockhandClient(config);
   const app = createMcpExpressApp({ host: '0.0.0.0', allowedHosts: config.allowedHosts });
 
-  const node = toNodeHandler(createMcpHandler(() => buildServer(client, config.readonly)));
+  const node = toNodeHandler(createMcpHandler(() => buildServer(client, config)));
 
   app.all('/mcp', requireMcpAuthToken(config.mcpAuthToken), (req, res) => void node(req, res, req.body));
 
