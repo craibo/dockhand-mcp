@@ -7,6 +7,12 @@ export interface Config {
   readonly: boolean;
   port: number;
   allowedHosts?: string[];
+  enableBackups: boolean;
+  enableUsers: boolean;
+  enableRegistries: boolean;
+  enableVulnerabilities: boolean;
+  enableGit: boolean;
+  enableSchedules: boolean;
 }
 
 export class ConfigError extends Error {
@@ -68,12 +74,25 @@ export function loadConfig(
     .filter((h) => h.length > 0);
   const resolvedAllowedHosts = allowedHosts && allowedHosts.length > 0 ? allowedHosts : undefined;
 
+  const enableBackups = env.DOCKHAND_MCP_ENABLE_BACKUPS === 'true';
+  const enableUsers = env.DOCKHAND_MCP_ENABLE_USERS === 'true';
+  const enableRegistries = env.DOCKHAND_MCP_ENABLE_REGISTRIES === 'true';
+  const enableVulnerabilities = env.DOCKHAND_MCP_ENABLE_VULNERABILITIES === 'true';
+  const enableGit = env.DOCKHAND_MCP_ENABLE_GIT === 'true';
+  const enableSchedules = env.DOCKHAND_MCP_ENABLE_SCHEDULES === 'true';
+
   return {
     dockhandUrl,
     dockhandApiToken,
     mcpAuthToken,
     readonly: env.DOCKHAND_MCP_READONLY === 'true',
     port,
-    allowedHosts: resolvedAllowedHosts
+    allowedHosts: resolvedAllowedHosts,
+    enableBackups,
+    enableUsers,
+    enableRegistries,
+    enableVulnerabilities,
+    enableGit,
+    enableSchedules
   };
 }

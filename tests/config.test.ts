@@ -15,8 +15,38 @@ describe('loadConfig', () => {
       dockhandApiToken: 'dh_testtoken',
       mcpAuthToken: 'secret123',
       readonly: false,
-      port: 8787
+      port: 8787,
+      enableBackups: false,
+      enableUsers: false,
+      enableRegistries: false,
+      enableVulnerabilities: false,
+      enableGit: false,
+      enableSchedules: false
     });
+  });
+
+  it('defaults all domain toggles to false when unset', () => {
+    const config = loadConfig(baseEnv as NodeJS.ProcessEnv);
+    expect(config.enableBackups).toBe(false);
+    expect(config.enableUsers).toBe(false);
+    expect(config.enableRegistries).toBe(false);
+    expect(config.enableVulnerabilities).toBe(false);
+    expect(config.enableGit).toBe(false);
+    expect(config.enableSchedules).toBe(false);
+  });
+
+  it('parses each DOCKHAND_MCP_ENABLE_* toggle independently', () => {
+    const config = loadConfig({
+      ...baseEnv,
+      DOCKHAND_MCP_ENABLE_BACKUPS: 'true',
+      DOCKHAND_MCP_ENABLE_VULNERABILITIES: 'true'
+    } as NodeJS.ProcessEnv);
+    expect(config.enableBackups).toBe(true);
+    expect(config.enableVulnerabilities).toBe(true);
+    expect(config.enableUsers).toBe(false);
+    expect(config.enableRegistries).toBe(false);
+    expect(config.enableGit).toBe(false);
+    expect(config.enableSchedules).toBe(false);
   });
 
   it('parses DOCKHAND_MCP_READONLY=true', () => {
