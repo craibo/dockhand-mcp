@@ -4,3 +4,4 @@ build/
 .env
 .idea/
 .DS_Store
+docs/superpowers/plans/
