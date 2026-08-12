@@ -35,6 +35,8 @@ docker run -p 8787:8787 \
 
 See `docker-compose.example.yaml` for running alongside Dockhand itself.
 
+On startup, the sidecar checks connectivity to `DOCKHAND_URL` by calling `GET /api/environments` and logs the result, along with the minimum supported Dockhand version. A failed check is logged as an error but does not prevent the server from starting — Dockhand may simply not be ready yet — so tool calls will fail individually with clear errors until Dockhand is reachable. Dockhand does not expose its own app version through a REST endpoint, so the minimum-version notice is informational rather than actively enforced.
+
 ## MCP endpoint
 
 `POST /mcp` — Streamable HTTP MCP endpoint. Requires `Authorization: Bearer <MCP_AUTH_TOKEN>`.
