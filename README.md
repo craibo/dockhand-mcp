@@ -14,6 +14,12 @@ This is a standalone service — it does not modify Dockhand itself, and calls D
 | `MCP_AUTH_TOKEN` | yes | Shared secret required by MCP clients calling this sidecar |
 | `MCP_ALLOWED_HOSTS` | no | Comma-separated list of exact hostnames to allow via DNS-rebinding host-header validation. Unset by default — no host filtering is applied, and MCP_AUTH_TOKEN remains the primary access-control gate. |
 | `DOCKHAND_MCP_READONLY` | no (default `false`) | Set `true` to only register read/list/inspect tools |
+| `DOCKHAND_MCP_ENABLE_BACKUPS` | no (default `false`) | Set `true` to register backup config/snapshot tools |
+| `DOCKHAND_MCP_ENABLE_USERS` | no (default `false`) | Set `true` to register user and role tools |
+| `DOCKHAND_MCP_ENABLE_REGISTRIES` | no (default `false`) | Set `true` to register the registry listing tool |
+| `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | no (default `false`) | Set `true` to register vulnerability listing and scan tools |
+| `DOCKHAND_MCP_ENABLE_GIT` | no (default `false`) | Set `true` to register git-backed stack tools |
+| `DOCKHAND_MCP_ENABLE_SCHEDULES` | no (default `false`) | Set `true` to register schedule tools |
 | `PORT` | no (default `8787`) | Port the MCP endpoint listens on |
 
 ## Running
@@ -63,11 +69,26 @@ claude mcp add dockhand-mcp --transport http https://dockhand-mcp.example.com/mc
 
 ## Tools
 
-Every tool except `list_environments` requires an `environmentId` — call `list_environments` first to discover valid IDs.
+Every tool except `list_environments`, `list_users`, `get_user`, `list_roles`, `list_registries`, and `list_schedules` requires an `environmentId` (or an id scoped to a specific stored resource) — call `list_environments` first to discover valid environment IDs.
+
+### Core (always registered)
 
 Read-only: `list_environments`, `list_containers`, `get_container`, `get_container_logs`, `list_images`, `list_volumes`, `list_networks`, `list_stacks`
 
 Mutating (disabled when `DOCKHAND_MCP_READONLY=true`): `start_container`, `stop_container`, `restart_container`, `remove_container`, `pull_image`, `remove_image`, `remove_volume`, `deploy_stack`, `stop_stack`
+
+### Extended (each domain disabled by default — see Configuration table above)
+
+| Domain | Toggle | Read-only tools | Mutating tools (also disabled when `DOCKHAND_MCP_READONLY=true`) |
+|---|---|---|---|
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | `list_backup_configs`, `list_snapshots` | `run_backup_config` |
+| Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | `list_users`, `get_user`, `list_roles` | — |
+| Registries | `DOCKHAND_MCP_ENABLE_REGISTRIES` | `list_registries` | — |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | `list_vulnerabilities` | `scan_all_vulnerabilities` |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | `list_git_stacks` | `sync_git_stack`, `deploy_git_stack` |
+| Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | `list_schedules` | `run_schedule`, `toggle_schedule` |
+
+These six domains intentionally wrap only a minimal slice of Dockhand's REST surface for each area (no user/role/registry/git-credential CRUD) — full CRUD for these domains is out of scope, consistent with the project's minimal, LLM-friendly tool surface.
 
 ## Development
 
