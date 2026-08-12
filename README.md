@@ -9,7 +9,7 @@ This is a standalone service — it does not modify Dockhand itself, and calls D
 | Var | Required | Description |
 |---|---|---|
 | `DOCKHAND_URL` | yes | Base URL of the Dockhand instance, e.g. `http://dockhand:3000` |
-| `DOCKHAND_API_TOKEN` | one of these two | Dockhand API token (create one in Dockhand under Settings → Auth → API Tokens) |
+| `DOCKHAND_API_TOKEN` | one of these two | Dockhand API token (create one in Dockhand under Profile → API tokens) |
 | `DOCKHAND_API_TOKEN_FILE` | one of these two | Path to a file/Docker secret containing the token |
 | `MCP_AUTH_TOKEN` | yes | Shared secret required by MCP clients calling this sidecar |
 | `MCP_ALLOWED_HOSTS` | no | Comma-separated list of exact hostnames to allow via DNS-rebinding host-header validation. Unset by default — no host filtering is applied, and MCP_AUTH_TOKEN remains the primary access-control gate. |
@@ -34,6 +34,32 @@ See `docker-compose.example.yaml` for running alongside Dockhand itself.
 `POST /mcp` — Streamable HTTP MCP endpoint. Requires `Authorization: Bearer <MCP_AUTH_TOKEN>`.
 
 `GET /health` — unauthenticated liveness check.
+
+## Client configuration
+
+Example `.mcp.json` for Claude Code (or `~/.claude.json` for a user-scoped config), pointing at a deployed sidecar:
+
+```json
+{
+  "mcpServers": {
+    "dockhand-mcp": {
+      "type": "http",
+      "url": "https://dockhand-mcp.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_AUTH_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Equivalent CLI command:
+
+```bash
+claude mcp add dockhand-mcp --transport http https://dockhand-mcp.example.com/mcp --header "Authorization: Bearer ${MCP_AUTH_TOKEN}"
+```
+
+`${MCP_AUTH_TOKEN}` expands from the environment Claude Code runs in — set it to the same value configured on the sidecar, rather than hardcoding the token in the config file.
 
 ## Tools
 
