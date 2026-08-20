@@ -48,6 +48,8 @@ describe('buildServer — core v1 tools', () => {
         'remove_container',
         'list_images',
         'pull_image',
+        'get_image_pull_status',
+        'cancel_image_pull',
         'remove_image',
         'list_volumes',
         'remove_volume',
@@ -61,7 +63,7 @@ describe('buildServer — core v1 tools', () => {
         'cancel_stack_stop'
       ])
     );
-    expect(names).toHaveLength(21);
+    expect(names).toHaveLength(23);
   });
 
   it('omits mutating tools when readonly=true', () => {

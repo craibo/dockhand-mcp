@@ -4,7 +4,7 @@ import { registerImageTools } from '../../src/tools/images.js';
 import type { DockhandClient } from '../../src/dockhandClient.js';
 
 function makeClient(overrides: Partial<DockhandClient> = {}): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), del: vi.fn(), ...overrides };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn(), ...overrides };
 }
 
 async function callTool(server: McpServer, name: string, args: Record<string, unknown>) {
@@ -28,14 +28,14 @@ describe('registerImageTools', () => {
     expect(client.get).toHaveBeenCalledWith('/api/images', { env: 2 });
   });
 
-  it('pull_image posts image name and scanAfterPull', async () => {
-    const client = makeClient({ post: vi.fn().mockResolvedValue({ status: 'complete' }) });
+  it('pull_image posts image name and scanAfterPull via postJob', async () => {
+    const client = makeClient({ postJob: vi.fn().mockResolvedValue({ jobId: 'job-1' }) });
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerImageTools(server, client, false);
 
     const result = await callTool(server, 'pull_image', { environmentId: 2, image: 'nginx:latest', scanAfterPull: false });
-    expect(client.post).toHaveBeenCalledWith('/api/images/pull', { image: 'nginx:latest', scanAfterPull: false }, { env: 2 });
-    expect(result.content[0].text).toContain('complete');
+    expect(client.postJob).toHaveBeenCalledWith('/api/images/pull', { image: 'nginx:latest', scanAfterPull: false }, { env: 2 });
+    expect(result.content[0].text).toContain('job-1');
   });
 
   it('remove_image deletes with force param', async () => {
@@ -53,5 +53,28 @@ describe('registerImageTools', () => {
     expect(hasTool(server, 'pull_image')).toBe(false);
     expect(hasTool(server, 'remove_image')).toBe(false);
     expect(hasTool(server, 'list_images')).toBe(true);
+  });
+
+  it('registers status and cancel tools for pull_image', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerImageTools(server, makeClient(), false);
+    expect(hasTool(server, 'get_image_pull_status')).toBe(true);
+    expect(hasTool(server, 'cancel_image_pull')).toBe(true);
+  });
+
+  it('get_image_pull_status calls client.get on the jobs endpoint', async () => {
+    const client = makeClient({ get: vi.fn().mockResolvedValue({ status: 'done' }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerImageTools(server, client, false);
+
+    await callTool(server, 'get_image_pull_status', { jobId: 'job-1' });
+    expect(client.get).toHaveBeenCalledWith('/api/jobs/job-1');
+  });
+
+  it('omits get_image_pull_status and cancel_image_pull when readonly', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerImageTools(server, makeClient(), true);
+    expect(hasTool(server, 'get_image_pull_status')).toBe(false);
+    expect(hasTool(server, 'cancel_image_pull')).toBe(false);
   });
 });

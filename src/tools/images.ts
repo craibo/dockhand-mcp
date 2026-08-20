@@ -3,6 +3,7 @@ import * as z from 'zod';
 import type { DockhandClient } from '../dockhandClient.js';
 import { toErrorResult, toTextResult } from '../toolError.js';
 import { environmentIdSchema } from '../types.js';
+import { registerJobStatusTool, registerJobCancelTool } from '../jobStatus.js';
 
 export function registerImageTools(server: McpServer, client: DockhandClient, readonly: boolean): void {
   server.registerTool(
@@ -28,7 +29,7 @@ export function registerImageTools(server: McpServer, client: DockhandClient, re
   server.registerTool(
     'pull_image',
     {
-      description: 'Pull an image from a registry. Blocks until the pull completes or fails.',
+      description: 'Pull an image from a registry. Returns immediately with a jobId — call get_image_pull_status with that jobId to check progress, and cancel_image_pull to abort.',
       inputSchema: z.object({
         environmentId: environmentIdSchema,
         image: z.string().describe('Image reference, e.g. nginx:latest'),
@@ -37,13 +38,15 @@ export function registerImageTools(server: McpServer, client: DockhandClient, re
     },
     async ({ environmentId, image, scanAfterPull }) => {
       try {
-        const result = await client.post('/api/images/pull', { image, scanAfterPull }, { env: environmentId });
+        const result = await client.postJob('/api/images/pull', { image, scanAfterPull }, { env: environmentId });
         return toTextResult(result);
       } catch (error) {
         return toErrorResult(error);
       }
     }
   );
+  registerJobStatusTool(server, client, 'get_image_pull_status', 'Check the status of an image pull started by pull_image.');
+  registerJobCancelTool(server, client, 'cancel_image_pull', 'Cancel a running image pull started by pull_image.');
 
   server.registerTool(
     'remove_image',
