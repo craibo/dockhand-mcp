@@ -91,10 +91,10 @@ describe('registerBackupTools — readonly=true', () => {
     expect(hasTool(server, 'list_snapshots')).toBe(true);
   });
 
-  it('omits get_backup_run_status and cancel_backup_run when readonly', () => {
+  it('keeps get_backup_run_status but omits cancel_backup_run when readonly', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerBackupTools(server, makeClient(), true);
-    expect(hasTool(server, 'get_backup_run_status')).toBe(false);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(true);
     expect(hasTool(server, 'cancel_backup_run')).toBe(false);
   });
 });

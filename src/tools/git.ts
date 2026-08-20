@@ -25,6 +25,8 @@ export function registerGitTools(server: McpServer, client: DockhandClient, read
     }
   );
 
+  registerJobStatusTool(server, client, 'get_git_deploy_status', 'Check the status of a git stack deploy started by deploy_git_stack.');
+
   if (readonly) {
     return;
   }
@@ -64,6 +66,5 @@ export function registerGitTools(server: McpServer, client: DockhandClient, read
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_git_deploy_status', 'Check the status of a git stack deploy started by deploy_git_stack.');
   registerJobCancelTool(server, client, 'cancel_git_deploy', 'Cancel a running git stack deploy started by deploy_git_stack.');
 }

@@ -22,6 +22,9 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
     }
   );
 
+  registerJobStatusTool(server, client, 'get_stack_deploy_status', 'Check the status of a stack deploy started by deploy_stack.');
+  registerJobStatusTool(server, client, 'get_stack_stop_status', 'Check the status of a stack stop started by stop_stack.');
+
   if (readonly) {
     return;
   }
@@ -51,7 +54,6 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_stack_deploy_status', 'Check the status of a stack deploy started by deploy_stack.');
   registerJobCancelTool(server, client, 'cancel_stack_deploy', 'Cancel a running stack deploy started by deploy_stack.');
 
   server.registerTool(
@@ -77,6 +79,5 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_stack_stop_status', 'Check the status of a stack stop started by stop_stack.');
   registerJobCancelTool(server, client, 'cancel_stack_stop', 'Cancel a running stack stop started by stop_stack.');
 }

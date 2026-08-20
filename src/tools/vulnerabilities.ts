@@ -45,6 +45,8 @@ export function registerVulnerabilityTools(server: McpServer, client: DockhandCl
     }
   );
 
+  registerJobStatusTool(server, client, 'get_vulnerability_scan_status', 'Check the status of a vulnerability scan started by scan_all_vulnerabilities.');
+
   if (readonly) {
     return;
   }
@@ -66,6 +68,5 @@ export function registerVulnerabilityTools(server: McpServer, client: DockhandCl
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_vulnerability_scan_status', 'Check the status of a vulnerability scan started by scan_all_vulnerabilities.');
   registerJobCancelTool(server, client, 'cancel_vulnerability_scan', 'Cancel a running vulnerability scan started by scan_all_vulnerabilities.');
 }

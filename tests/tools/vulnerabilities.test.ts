@@ -83,10 +83,10 @@ describe('registerVulnerabilityTools — readonly=true', () => {
     expect(hasTool(server, 'list_vulnerabilities')).toBe(true);
   });
 
-  it('omits get_vulnerability_scan_status and cancel_vulnerability_scan when readonly', () => {
+  it('keeps get_vulnerability_scan_status but omits cancel_vulnerability_scan when readonly', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerVulnerabilityTools(server, makeClient(), true);
-    expect(hasTool(server, 'get_vulnerability_scan_status')).toBe(false);
+    expect(hasTool(server, 'get_vulnerability_scan_status')).toBe(true);
     expect(hasTool(server, 'cancel_vulnerability_scan')).toBe(false);
   });
 });

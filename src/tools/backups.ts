@@ -45,6 +45,8 @@ export function registerBackupTools(server: McpServer, client: DockhandClient, r
     }
   );
 
+  registerJobStatusTool(server, client, 'get_backup_run_status', 'Check the status of a backup run started by run_backup_config.');
+
   if (readonly) {
     return;
   }
@@ -66,6 +68,5 @@ export function registerBackupTools(server: McpServer, client: DockhandClient, r
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_backup_run_status', 'Check the status of a backup run started by run_backup_config.');
   registerJobCancelTool(server, client, 'cancel_backup_run', 'Cancel a running backup started by run_backup_config.');
 }

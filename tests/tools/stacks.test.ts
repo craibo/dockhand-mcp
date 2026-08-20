@@ -97,7 +97,7 @@ describe('registerStackTools', () => {
     registerStackTools(server, makeClient(), true);
     expect(hasTool(server, 'cancel_stack_deploy')).toBe(false);
     expect(hasTool(server, 'cancel_stack_stop')).toBe(false);
-    expect(hasTool(server, 'get_stack_deploy_status')).toBe(false);
-    expect(hasTool(server, 'get_stack_stop_status')).toBe(false);
+    expect(hasTool(server, 'get_stack_deploy_status')).toBe(true);
+    expect(hasTool(server, 'get_stack_stop_status')).toBe(true);
   });
 });

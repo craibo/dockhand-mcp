@@ -76,12 +76,15 @@ describe('buildServer — core v1 tools', () => {
         'get_container',
         'get_container_logs',
         'list_images',
+        'get_image_pull_status',
         'list_volumes',
         'list_networks',
-        'list_stacks'
+        'list_stacks',
+        'get_stack_deploy_status',
+        'get_stack_stop_status'
       ])
     );
-    expect(names).toHaveLength(8);
+    expect(names).toHaveLength(11);
   });
 });
 
@@ -152,7 +155,7 @@ describe('buildServer — readonly still gates mutating tools within an enabled 
     const server = buildServer(makeClient(), { ...baseConfig, enableBackups: true, readonly: true });
     expect(hasTool(server, 'list_backup_configs')).toBe(true);
     expect(hasTool(server, 'run_backup_config')).toBe(false);
-    expect(hasTool(server, 'get_backup_run_status')).toBe(false);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(true);
     expect(hasTool(server, 'cancel_backup_run')).toBe(false);
   });
 });

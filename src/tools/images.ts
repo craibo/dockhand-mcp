@@ -22,6 +22,8 @@ export function registerImageTools(server: McpServer, client: DockhandClient, re
     }
   );
 
+  registerJobStatusTool(server, client, 'get_image_pull_status', 'Check the status of an image pull started by pull_image.');
+
   if (readonly) {
     return;
   }
@@ -45,7 +47,6 @@ export function registerImageTools(server: McpServer, client: DockhandClient, re
       }
     }
   );
-  registerJobStatusTool(server, client, 'get_image_pull_status', 'Check the status of an image pull started by pull_image.');
   registerJobCancelTool(server, client, 'cancel_image_pull', 'Cancel a running image pull started by pull_image.');
 
   server.registerTool(

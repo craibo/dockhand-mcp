@@ -83,10 +83,10 @@ describe('registerGitTools — readonly=true', () => {
     expect(hasTool(server, 'list_git_stacks')).toBe(true);
   });
 
-  it('omits get_git_deploy_status and cancel_git_deploy when readonly', () => {
+  it('keeps get_git_deploy_status but omits cancel_git_deploy when readonly', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerGitTools(server, makeClient(), true);
-    expect(hasTool(server, 'get_git_deploy_status')).toBe(false);
+    expect(hasTool(server, 'get_git_deploy_status')).toBe(true);
     expect(hasTool(server, 'cancel_git_deploy')).toBe(false);
   });
 });

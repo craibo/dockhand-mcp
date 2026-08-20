@@ -71,10 +71,10 @@ describe('registerImageTools', () => {
     expect(client.get).toHaveBeenCalledWith('/api/jobs/job-1');
   });
 
-  it('omits get_image_pull_status and cancel_image_pull when readonly', () => {
+  it('keeps get_image_pull_status but omits cancel_image_pull when readonly', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerImageTools(server, makeClient(), true);
-    expect(hasTool(server, 'get_image_pull_status')).toBe(false);
+    expect(hasTool(server, 'get_image_pull_status')).toBe(true);
     expect(hasTool(server, 'cancel_image_pull')).toBe(false);
   });
 });
