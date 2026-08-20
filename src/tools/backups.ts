@@ -4,6 +4,7 @@ import * as z from 'zod';
 import type { DockhandClient } from '../dockhandClient.js';
 import { toErrorResult, toTextResult } from '../toolError.js';
 import { environmentIdSchema } from '../types.js';
+import { registerJobStatusTool, registerJobCancelTool } from '../jobStatus.js';
 
 export function registerBackupTools(server: McpServer, client: DockhandClient, readonly: boolean): void {
   server.registerTool(
@@ -51,18 +52,20 @@ export function registerBackupTools(server: McpServer, client: DockhandClient, r
   server.registerTool(
     'run_backup_config',
     {
-      description: 'Manually trigger a backup config to run now. Blocks until the backup completes or fails.',
+      description: 'Manually trigger a backup config to run now. Returns immediately with a jobId — call get_backup_run_status with that jobId to check progress, and cancel_backup_run to abort.',
       inputSchema: z.object({
         configId: z.number().int().positive().describe('Backup config ID, from list_backup_configs')
       })
     },
     async ({ configId }) => {
       try {
-        const result = await client.post(`/api/backup/configs/${configId}/run`);
+        const result = await client.postJob(`/api/backup/configs/${configId}/run`);
         return toTextResult(result);
       } catch (error) {
         return toErrorResult(error);
       }
     }
   );
+  registerJobStatusTool(server, client, 'get_backup_run_status', 'Check the status of a backup run started by run_backup_config.');
+  registerJobCancelTool(server, client, 'cancel_backup_run', 'Cancel a running backup started by run_backup_config.');
 }

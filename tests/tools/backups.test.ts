@@ -5,7 +5,7 @@ import { registerBackupTools } from '../../src/tools/backups.js';
 import type { DockhandClient } from '../../src/dockhandClient.js';
 
 function makeClient(overrides: Partial<DockhandClient> = {}): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), del: vi.fn(), ...overrides };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn(), ...overrides };
 }
 
 async function callTool(server: McpServer, name: string, args: Record<string, unknown>) {
@@ -55,14 +55,30 @@ describe('registerBackupTools — mutating tools when readonly=false', () => {
     expect(hasTool(server, 'run_backup_config')).toBe(true);
   });
 
-  it('run_backup_config posts to the run endpoint with no body', async () => {
-    const client = makeClient({ post: vi.fn().mockResolvedValue({ status: 'success' }) });
+  it('run_backup_config posts to the run endpoint via postJob', async () => {
+    const client = makeClient({ postJob: vi.fn().mockResolvedValue({ jobId: 'job-1' }) });
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerBackupTools(server, client, false);
 
     const result = await callTool(server, 'run_backup_config', { configId: 5 });
-    expect(client.post).toHaveBeenCalledWith('/api/backup/configs/5/run');
-    expect(result.content[0].text).toContain('success');
+    expect(client.postJob).toHaveBeenCalledWith('/api/backup/configs/5/run');
+    expect(result.content[0].text).toContain('job-1');
+  });
+
+  it('registers status and cancel tools for run_backup_config', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerBackupTools(server, makeClient(), false);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(true);
+    expect(hasTool(server, 'cancel_backup_run')).toBe(true);
+  });
+
+  it('get_backup_run_status calls client.get on the jobs endpoint', async () => {
+    const client = makeClient({ get: vi.fn().mockResolvedValue({ status: 'done' }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerBackupTools(server, client, false);
+
+    await callTool(server, 'get_backup_run_status', { jobId: 'job-1' });
+    expect(client.get).toHaveBeenCalledWith('/api/jobs/job-1');
   });
 });
 
@@ -73,5 +89,12 @@ describe('registerBackupTools — readonly=true', () => {
     expect(hasTool(server, 'run_backup_config')).toBe(false);
     expect(hasTool(server, 'list_backup_configs')).toBe(true);
     expect(hasTool(server, 'list_snapshots')).toBe(true);
+  });
+
+  it('omits get_backup_run_status and cancel_backup_run when readonly', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerBackupTools(server, makeClient(), true);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(false);
+    expect(hasTool(server, 'cancel_backup_run')).toBe(false);
   });
 });
