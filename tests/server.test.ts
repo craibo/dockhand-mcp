@@ -5,7 +5,7 @@ import type { DockhandClient } from '../src/dockhandClient.js';
 import type { Config } from '../src/config.js';
 
 function makeClient(): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), del: vi.fn() };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn() };
 }
 
 function toolNames(server: ReturnType<typeof buildServer>): string[] {
@@ -88,13 +88,19 @@ describe('buildServer — core v1 tools', () => {
 const newDomainTools = [
   'list_backup_configs',
   'run_backup_config',
+  'get_backup_run_status',
+  'cancel_backup_run',
   'list_users',
   'list_roles',
   'list_registries',
   'list_vulnerabilities',
   'scan_all_vulnerabilities',
+  'get_vulnerability_scan_status',
+  'cancel_vulnerability_scan',
   'list_git_stacks',
   'deploy_git_stack',
+  'get_git_deploy_status',
+  'cancel_git_deploy',
   'list_schedules',
   'run_schedule'
 ];
@@ -146,5 +152,7 @@ describe('buildServer — readonly still gates mutating tools within an enabled 
     const server = buildServer(makeClient(), { ...baseConfig, enableBackups: true, readonly: true });
     expect(hasTool(server, 'list_backup_configs')).toBe(true);
     expect(hasTool(server, 'run_backup_config')).toBe(false);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(false);
+    expect(hasTool(server, 'cancel_backup_run')).toBe(false);
   });
 });
