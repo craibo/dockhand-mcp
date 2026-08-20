@@ -54,10 +54,14 @@ describe('buildServer — core v1 tools', () => {
         'list_networks',
         'list_stacks',
         'deploy_stack',
-        'stop_stack'
+        'get_stack_deploy_status',
+        'cancel_stack_deploy',
+        'stop_stack',
+        'get_stack_stop_status',
+        'cancel_stack_stop'
       ])
     );
-    expect(names).toHaveLength(17);
+    expect(names).toHaveLength(21);
   });
 
   it('omits mutating tools when readonly=true', () => {
