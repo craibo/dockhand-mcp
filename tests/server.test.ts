@@ -5,7 +5,7 @@ import type { DockhandClient } from '../src/dockhandClient.js';
 import type { Config } from '../src/config.js';
 
 function makeClient(): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn() };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), put: vi.fn(), del: vi.fn() };
 }
 
 function toolNames(server: ReturnType<typeof buildServer>): string[] {
@@ -60,10 +60,14 @@ describe('buildServer — core v1 tools', () => {
         'cancel_stack_deploy',
         'stop_stack',
         'get_stack_stop_status',
-        'cancel_stack_stop'
+        'cancel_stack_stop',
+        'get_stack_env',
+        'set_stack_secret',
+        'get_stack_env_file',
+        'set_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(23);
+    expect(names).toHaveLength(27);
   });
 
   it('omits mutating tools when readonly=true', () => {
@@ -81,10 +85,12 @@ describe('buildServer — core v1 tools', () => {
         'list_networks',
         'list_stacks',
         'get_stack_deploy_status',
-        'get_stack_stop_status'
+        'get_stack_stop_status',
+        'get_stack_env',
+        'get_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(11);
+    expect(names).toHaveLength(13);
   });
 });
 

@@ -173,4 +173,35 @@ describe('DockhandClient', () => {
       message: 'Stack not found'
     });
   });
+
+  it('put sends a JSON body and query params, and returns the response', async () => {
+    let seenBody: unknown;
+    let seenUrl = '';
+    let seenMethod = '';
+    server.use(
+      http.put('http://dockhand:3000/api/stacks/my-app/env', async ({ request }) => {
+        seenBody = await request.json().catch(() => null);
+        seenUrl = request.url;
+        seenMethod = request.method;
+        return HttpResponse.json({ success: true, count: 1 });
+      })
+    );
+    const result = await client.put('/api/stacks/my-app/env', { variables: [{ key: 'FOO', value: 'bar' }] }, { env: 5 });
+    expect(result).toEqual({ success: true, count: 1 });
+    expect(seenMethod).toBe('PUT');
+    expect(seenBody).toEqual({ variables: [{ key: 'FOO', value: 'bar' }] });
+    expect(new URL(seenUrl).searchParams.get('env')).toBe('5');
+  });
+
+  it('put throws DockhandError on non-2xx', async () => {
+    server.use(
+      http.put('http://dockhand:3000/api/stacks/my-app/env/raw', () =>
+        HttpResponse.json({ error: 'Invalid content' }, { status: 400 })
+      )
+    );
+    await expect(client.put('/api/stacks/my-app/env/raw', { content: '***=bad' })).rejects.toMatchObject({
+      status: 400,
+      message: 'Invalid content'
+    });
+  });
 });
