@@ -81,7 +81,7 @@ describe('dockhand-mcp Express app', () => {
     // `res.body`.
     expect(initRes.headers['content-type']).toContain('text/event-stream');
     const initMessage = parseSseJson(initRes.text);
-    expect(initMessage.result.serverInfo).toEqual({ name: 'dockhand-mcp', version: '0.3.0' });
+    expect(initMessage.result.serverInfo).toEqual({ name: 'dockhand-mcp', version: '0.4.0' });
 
     // This server's default `legacy: 'stateless'` posture serves each
     // 2025-era request independently (a fresh server instance per request,
