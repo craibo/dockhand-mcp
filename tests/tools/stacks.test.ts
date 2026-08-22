@@ -4,7 +4,7 @@ import { registerStackTools } from '../../src/tools/stacks.js';
 import type { DockhandClient } from '../../src/dockhandClient.js';
 
 function makeClient(overrides: Partial<DockhandClient> = {}): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn(), ...overrides };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), put: vi.fn(), del: vi.fn(), ...overrides };
 }
 
 async function callTool(server: McpServer, name: string, args: Record<string, unknown>) {
@@ -99,5 +99,66 @@ describe('registerStackTools', () => {
     expect(hasTool(server, 'cancel_stack_stop')).toBe(false);
     expect(hasTool(server, 'get_stack_deploy_status')).toBe(true);
     expect(hasTool(server, 'get_stack_stop_status')).toBe(true);
+  });
+
+  it('get_stack_env passes environmentId and encodes stack name', async () => {
+    const client = makeClient({
+      get: vi.fn().mockResolvedValue({ variables: [{ key: 'FOO', value: 'bar', isSecret: false }] })
+    });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    const result = await callTool(server, 'get_stack_env', { environmentId: 5, stackName: 'my app' });
+    expect(client.get).toHaveBeenCalledWith('/api/stacks/my%20app/env', { env: 5 });
+    expect(result.content[0].text).toContain('FOO');
+  });
+
+  it('set_stack_secret puts variables and encodes stack name', async () => {
+    const client = makeClient({ put: vi.fn().mockResolvedValue({ success: true, count: 1 }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    const variables = [{ key: 'DB_PASSWORD', value: 'secret123', isSecret: true }];
+    const result = await callTool(server, 'set_stack_secret', { environmentId: 5, stackName: 'my-app', variables });
+    expect(client.put).toHaveBeenCalledWith('/api/stacks/my-app/env', { variables }, { env: 5 });
+    expect(result.content[0].text).toContain('success');
+  });
+
+  it('omits set_stack_secret when readonly but keeps get_stack_env', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, makeClient(), true);
+    expect(hasTool(server, 'set_stack_secret')).toBe(false);
+    expect(hasTool(server, 'get_stack_env')).toBe(true);
+  });
+
+  it('get_stack_env_file passes environmentId and encodes stack name', async () => {
+    const client = makeClient({ get: vi.fn().mockResolvedValue({ content: 'FOO=bar\n' }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    const result = await callTool(server, 'get_stack_env_file', { environmentId: 5, stackName: 'my app' });
+    expect(client.get).toHaveBeenCalledWith('/api/stacks/my%20app/env/raw', { env: 5 });
+    expect(result.content[0].text).toContain('FOO=bar');
+  });
+
+  it('set_stack_env_file puts raw content and encodes stack name', async () => {
+    const client = makeClient({ put: vi.fn().mockResolvedValue({ success: true }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    const result = await callTool(server, 'set_stack_env_file', {
+      environmentId: 5,
+      stackName: 'my-app',
+      content: 'FOO=bar\n'
+    });
+    expect(client.put).toHaveBeenCalledWith('/api/stacks/my-app/env/raw', { content: 'FOO=bar\n' }, { env: 5 });
+    expect(result.content[0].text).toContain('success');
+  });
+
+  it('omits set_stack_env_file when readonly but keeps get_stack_env_file', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, makeClient(), true);
+    expect(hasTool(server, 'set_stack_env_file')).toBe(false);
+    expect(hasTool(server, 'get_stack_env_file')).toBe(true);
   });
 });

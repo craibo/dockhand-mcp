@@ -87,6 +87,8 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `list_volumes` | Read-only | List volumes in a Dockhand environment. |
 | `list_networks` | Read-only | List networks in a Dockhand environment. |
 | `list_stacks` | Read-only | List Compose stacks in a Dockhand environment. |
+| `get_stack_env` | Read-only | Get all environment variables for a stack (merged view of the `.env` file and stored secrets). Secret values are masked as `***`. |
+| `get_stack_env_file` | Read-only | Get the raw `.env` file content for a stack, as-is (comments and formatting preserved). Non-secret variables only. |
 | `start_container` | Mutating | Start a stopped container. |
 | `stop_container` | Mutating | Stop a running container. |
 | `restart_container` | Mutating | Restart a container. |
@@ -102,6 +104,8 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `stop_stack` | Mutating | Stop (down) a Compose stack. Returns immediately with a jobId — poll with `get_stack_stop_status`. |
 | `get_stack_stop_status` | Read-only | Check the status of a stack stop started by `stop_stack`. |
 | `cancel_stack_stop` | Mutating | Cancel a running stack stop started by `stop_stack`. |
+| `set_stack_secret` | Mutating | Save secret environment variables for a stack. Pass value `"***"` for a variable to keep its existing secret unchanged. |
+| `set_stack_env_file` | Mutating | Overwrite the raw `.env` file content for a stack. Replaces the entire file; empty content deletes it. |
 
 ### Extended (each domain off by default — set its toggle to `true` to enable)
 

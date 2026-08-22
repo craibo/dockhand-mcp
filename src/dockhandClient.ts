@@ -16,6 +16,7 @@ export interface DockhandClient {
   get<T>(path: string, params?: QueryParams): Promise<T>;
   post<T>(path: string, body?: unknown, params?: QueryParams): Promise<T>;
   postJob<T>(path: string, body?: unknown, params?: QueryParams): Promise<T>;
+  put<T>(path: string, body?: unknown, params?: QueryParams): Promise<T>;
   del<T>(path: string, params?: QueryParams): Promise<T>;
 }
 
@@ -83,6 +84,7 @@ export function createDockhandClient(config: { dockhandUrl: string; dockhandApiT
     get: (path, params) => request('GET', path, params),
     post: (path, body, params) => request('POST', path, params, body),
     postJob: (path, body, params) => request('POST', path, params, body, 'application/json, text/event-stream'),
+    put: (path, body, params) => request('PUT', path, params, body),
     del: (path, params) => request('DELETE', path, params)
   };
 }
