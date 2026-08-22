@@ -15,6 +15,7 @@ export class DockhandError extends Error {
 export interface DockhandClient {
   get<T>(path: string, params?: QueryParams): Promise<T>;
   post<T>(path: string, body?: unknown, params?: QueryParams): Promise<T>;
+  postJob<T>(path: string, body?: unknown, params?: QueryParams): Promise<T>;
   del<T>(path: string, params?: QueryParams): Promise<T>;
 }
 
@@ -48,13 +49,19 @@ async function parseErrorBody(response: Response): Promise<{ message: string; de
 }
 
 export function createDockhandClient(config: { dockhandUrl: string; dockhandApiToken: string }): DockhandClient {
-  async function request<T>(method: string, path: string, params?: QueryParams, body?: unknown): Promise<T> {
+  async function request<T>(
+    method: string,
+    path: string,
+    params?: QueryParams,
+    body?: unknown,
+    accept: string = 'application/json'
+  ): Promise<T> {
     const url = buildUrl(config.dockhandUrl, path, params);
     const response = await fetch(url, {
       method,
       headers: {
         Authorization: `Bearer ${config.dockhandApiToken}`,
-        Accept: 'application/json',
+        Accept: accept,
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {})
       },
       body: body !== undefined ? JSON.stringify(body) : undefined
@@ -75,6 +82,7 @@ export function createDockhandClient(config: { dockhandUrl: string; dockhandApiT
   return {
     get: (path, params) => request('GET', path, params),
     post: (path, body, params) => request('POST', path, params, body),
+    postJob: (path, body, params) => request('POST', path, params, body, 'application/json, text/event-stream'),
     del: (path, params) => request('DELETE', path, params)
   };
 }

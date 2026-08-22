@@ -5,7 +5,7 @@ import type { DockhandClient } from '../src/dockhandClient.js';
 import type { Config } from '../src/config.js';
 
 function makeClient(): DockhandClient {
-  return { get: vi.fn(), post: vi.fn(), del: vi.fn() };
+  return { get: vi.fn(), post: vi.fn(), postJob: vi.fn(), del: vi.fn() };
 }
 
 function toolNames(server: ReturnType<typeof buildServer>): string[] {
@@ -48,16 +48,22 @@ describe('buildServer — core v1 tools', () => {
         'remove_container',
         'list_images',
         'pull_image',
+        'get_image_pull_status',
+        'cancel_image_pull',
         'remove_image',
         'list_volumes',
         'remove_volume',
         'list_networks',
         'list_stacks',
         'deploy_stack',
-        'stop_stack'
+        'get_stack_deploy_status',
+        'cancel_stack_deploy',
+        'stop_stack',
+        'get_stack_stop_status',
+        'cancel_stack_stop'
       ])
     );
-    expect(names).toHaveLength(17);
+    expect(names).toHaveLength(23);
   });
 
   it('omits mutating tools when readonly=true', () => {
@@ -70,25 +76,34 @@ describe('buildServer — core v1 tools', () => {
         'get_container',
         'get_container_logs',
         'list_images',
+        'get_image_pull_status',
         'list_volumes',
         'list_networks',
-        'list_stacks'
+        'list_stacks',
+        'get_stack_deploy_status',
+        'get_stack_stop_status'
       ])
     );
-    expect(names).toHaveLength(8);
+    expect(names).toHaveLength(11);
   });
 });
 
 const newDomainTools = [
   'list_backup_configs',
   'run_backup_config',
+  'get_backup_run_status',
+  'cancel_backup_run',
   'list_users',
   'list_roles',
   'list_registries',
   'list_vulnerabilities',
   'scan_all_vulnerabilities',
+  'get_vulnerability_scan_status',
+  'cancel_vulnerability_scan',
   'list_git_stacks',
   'deploy_git_stack',
+  'get_git_deploy_status',
+  'cancel_git_deploy',
   'list_schedules',
   'run_schedule'
 ];
@@ -140,5 +155,7 @@ describe('buildServer — readonly still gates mutating tools within an enabled 
     const server = buildServer(makeClient(), { ...baseConfig, enableBackups: true, readonly: true });
     expect(hasTool(server, 'list_backup_configs')).toBe(true);
     expect(hasTool(server, 'run_backup_config')).toBe(false);
+    expect(hasTool(server, 'get_backup_run_status')).toBe(true);
+    expect(hasTool(server, 'cancel_backup_run')).toBe(false);
   });
 });

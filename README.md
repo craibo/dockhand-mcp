@@ -91,11 +91,17 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `stop_container` | Mutating | Stop a running container. |
 | `restart_container` | Mutating | Restart a container. |
 | `remove_container` | Mutating | Remove (delete) a container. |
-| `pull_image` | Mutating | Pull an image from a registry. Blocks until the pull completes or fails. |
+| `pull_image` | Mutating | Pull an image from a registry. Returns immediately with a jobId — poll with `get_image_pull_status`. |
+| `get_image_pull_status` | Read-only | Check the status of an image pull started by `pull_image`. |
+| `cancel_image_pull` | Mutating | Cancel a running image pull started by `pull_image`. |
 | `remove_image` | Mutating | Remove (delete) an image. |
 | `remove_volume` | Mutating | Remove (delete) a volume. |
-| `deploy_stack` | Mutating | Deploy (up) a Compose stack. Blocks until the deploy completes or fails. |
-| `stop_stack` | Mutating | Stop (down) a Compose stack. Blocks until it completes or fails. |
+| `deploy_stack` | Mutating | Deploy (up) a Compose stack. Returns immediately with a jobId — poll with `get_stack_deploy_status`. |
+| `get_stack_deploy_status` | Read-only | Check the status of a stack deploy started by `deploy_stack`. |
+| `cancel_stack_deploy` | Mutating | Cancel a running stack deploy started by `deploy_stack`. |
+| `stop_stack` | Mutating | Stop (down) a Compose stack. Returns immediately with a jobId — poll with `get_stack_stop_status`. |
+| `get_stack_stop_status` | Read-only | Check the status of a stack stop started by `stop_stack`. |
+| `cancel_stack_stop` | Mutating | Cancel a running stack stop started by `stop_stack`. |
 
 ### Extended (each domain off by default — set its toggle to `true` to enable)
 
@@ -103,16 +109,22 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 |---|---|---|---|---|---|
 | Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `list_backup_configs` | Read-only | List configured backups (stack or volume backup jobs) in Dockhand. |
 | Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `list_snapshots` | Read-only | List backup snapshots, optionally scoped to a single backup config. |
-| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `run_backup_config` | Mutating | Manually trigger a backup config to run now. Blocks until the backup completes or fails. |
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `run_backup_config` | Mutating | Manually trigger a backup config to run now. Returns immediately with a jobId — poll with `get_backup_run_status`. |
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `get_backup_run_status` | Read-only | Check the status of a backup run started by `run_backup_config`. |
+| Backups | `DOCKHAND_MCP_ENABLE_BACKUPS` | disabled by default | `cancel_backup_run` | Mutating | Cancel a running backup started by `run_backup_config`. |
 | Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `list_users` | Read-only | List all Dockhand users. |
 | Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `get_user` | Read-only | Get details for a single Dockhand user. |
 | Users/Roles | `DOCKHAND_MCP_ENABLE_USERS` | disabled by default | `list_roles` | Read-only | List all Dockhand roles. Requires an Enterprise license (returns an error on free-tier instances with auth enabled). |
 | Registries | `DOCKHAND_MCP_ENABLE_REGISTRIES` | disabled by default | `list_registries` | Read-only | List configured container registries in Dockhand. Credentials are never included — only a `hasCredentials` flag. |
 | Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `list_vulnerabilities` | Read-only | List aggregated vulnerability findings for an environment, with optional filtering and pagination. |
-| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `scan_all_vulnerabilities` | Mutating | Scan every image in an environment for vulnerabilities. Blocks until the batch scan completes. |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `scan_all_vulnerabilities` | Mutating | Scan every image in an environment for vulnerabilities. Returns immediately with a jobId — poll with `get_vulnerability_scan_status`. |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `get_vulnerability_scan_status` | Read-only | Check the status of a vulnerability scan started by `scan_all_vulnerabilities`. |
+| Vulnerabilities | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | disabled by default | `cancel_vulnerability_scan` | Mutating | Cancel a running vulnerability scan started by `scan_all_vulnerabilities`. |
 | Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `list_git_stacks` | Read-only | List git-backed Compose stacks in Dockhand. |
 | Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `sync_git_stack` | Mutating | Pull the latest commit for a git-backed stack from its remote, without redeploying. |
-| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `deploy_git_stack` | Mutating | Sync and redeploy a git-backed stack. Blocks until the deploy completes or fails. Check the `success` field in the result — a failed deploy is reported as a normal result, not a tool error. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `deploy_git_stack` | Mutating | Sync and redeploy a git-backed stack. Returns immediately with a jobId — poll with `get_git_deploy_status`. Check the `success` field in the final result once done — a failed deploy is reported there, not as a tool error. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `get_git_deploy_status` | Read-only | Check the status of a git stack deploy started by `deploy_git_stack`. |
+| Git deploy | `DOCKHAND_MCP_ENABLE_GIT` | disabled by default | `cancel_git_deploy` | Mutating | Cancel a running git stack deploy started by `deploy_git_stack`. |
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `list_schedules` | Read-only | List all active Dockhand schedules (container auto-updates, git stack syncs, backups, and system jobs). |
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `run_schedule` | Mutating | Manually trigger a schedule to run now. |
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `toggle_schedule` | Mutating | Enable or disable a schedule. Flips its current enabled state — check the returned `enabled` field to see the new state. |

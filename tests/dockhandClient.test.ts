@@ -125,4 +125,52 @@ describe('DockhandClient', () => {
     );
     await expect(client.get('/api/containers/abc/logs')).resolves.not.toThrow();
   });
+
+  it('postJob sends Accept: application/json, text/event-stream', async () => {
+    let seenHeaders: Headers | undefined;
+    server.use(
+      http.post('http://dockhand:3000/api/stacks/my-app/deploy', ({ request }) => {
+        seenHeaders = request.headers;
+        return HttpResponse.json({ jobId: 'job-123' });
+      })
+    );
+    const result = await client.postJob('/api/stacks/my-app/deploy', { pull: true }, { env: 1 });
+    expect(result).toEqual({ jobId: 'job-123' });
+    expect(seenHeaders?.get('accept')).toBe('application/json, text/event-stream');
+  });
+
+  it('postJob sends a JSON body and query params like post', async () => {
+    let seenBody: unknown;
+    let seenUrl = '';
+    server.use(
+      http.post('http://dockhand:3000/api/images/pull', async ({ request }) => {
+        seenBody = await request.json().catch(() => null);
+        seenUrl = request.url;
+        return HttpResponse.json({ jobId: 'job-456' });
+      })
+    );
+    await client.postJob('/api/images/pull', { image: 'nginx:latest' }, { env: 2 });
+    expect(seenBody).toEqual({ image: 'nginx:latest' });
+    expect(new URL(seenUrl).searchParams.get('env')).toBe('2');
+  });
+
+  it('postJob supports being called with no body and no params', async () => {
+    server.use(
+      http.post('http://dockhand:3000/api/git/stacks/9/deploy', () => HttpResponse.json({ jobId: 'job-789' }))
+    );
+    const result = await client.postJob('/api/git/stacks/9/deploy');
+    expect(result).toEqual({ jobId: 'job-789' });
+  });
+
+  it('postJob throws DockhandError on non-2xx like post', async () => {
+    server.use(
+      http.post('http://dockhand:3000/api/stacks/missing/deploy', () =>
+        HttpResponse.json({ error: 'Stack not found' }, { status: 404 })
+      )
+    );
+    await expect(client.postJob('/api/stacks/missing/deploy')).rejects.toMatchObject({
+      status: 404,
+      message: 'Stack not found'
+    });
+  });
 });
