@@ -36,5 +36,5 @@ export function toErrorResult(error: unknown): McpToolResult {
 }
 
 export function toTextResult(data: unknown): McpToolResult {
-  return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  return { content: [{ type: 'text', text: JSON.stringify(redactSecrets(data), null, 2) }] };
 }

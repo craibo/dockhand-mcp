@@ -32,6 +32,22 @@ describe('toTextResult', () => {
     expect(result.isError).toBeUndefined();
     expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ success: true, id: 'abc' }, null, 2) }]);
   });
+
+  it('redacts resolvedSecrets before serializing', () => {
+    const result = toTextResult({
+      success: true,
+      command: 'docker compose up',
+      resolvedSecrets: ['sk-live-abc123', 'db-password-xyz']
+    });
+    expect(result.content[0].text).not.toContain('sk-live-abc123');
+    expect(result.content[0].text).not.toContain('db-password-xyz');
+    expect(result.content[0].text).toContain('[REDACTED]');
+    expect(JSON.parse(result.content[0].text)).toEqual({
+      success: true,
+      command: 'docker compose up',
+      resolvedSecrets: '[REDACTED]'
+    });
+  });
 });
 
 describe('redactSecrets', () => {
