@@ -18,7 +18,7 @@ import { registerUpdateTools } from './tools/updates.js';
 import { registerExecTools } from './tools/exec.js';
 
 export function buildServer(client: DockhandClient, config: Config): McpServer {
-  const server = new McpServer({ name: 'dockhand-mcp', version: '0.6.0' });
+  const server = new McpServer({ name: 'dockhand-mcp', version: '0.6.1' });
 
   registerEnvironmentTools(server, client);
   registerContainerTools(server, client, config.readonly);
