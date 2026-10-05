@@ -61,6 +61,12 @@ describe('buildServer — core v1 tools', () => {
         'remove_volume',
         'list_networks',
         'list_stacks',
+        'list_pending_updates',
+        'check_container_updates',
+        'get_container_update_check_status',
+        'cancel_container_update_check',
+        'update_container',
+        'batch_update_containers',
         'deploy_stack',
         'get_stack_deploy_status',
         'cancel_stack_deploy',
@@ -78,7 +84,7 @@ describe('buildServer — core v1 tools', () => {
         'set_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(37);
+    expect(names).toHaveLength(43);
   });
 
   it('omits mutating tools when readonly=true', () => {
@@ -97,6 +103,8 @@ describe('buildServer — core v1 tools', () => {
         'list_volumes',
         'list_networks',
         'list_stacks',
+        'list_pending_updates',
+        'get_container_update_check_status',
         'get_stack_deploy_status',
         'get_stack_down_status',
         'get_stack_lifecycle_status',
@@ -104,7 +112,7 @@ describe('buildServer — core v1 tools', () => {
         'get_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(16);
+    expect(names).toHaveLength(18);
   });
 });
 

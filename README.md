@@ -92,6 +92,12 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `get_stack_env_file` | Read-only | Get the raw `.env` file content for a stack, as-is (comments and formatting preserved). Non-secret variables only. |
 | `get_container_stats` | Read-only | Get a one-shot CPU, memory, network and block-IO stats snapshot for a container. |
 | `get_container_top` | Read-only | List the processes running inside a container. |
+| `list_pending_updates` | Read-only | List containers that have a newer image available, from the last update check. |
+| `check_container_updates` | Mutating | Check all containers in an environment for newer images. Returns a jobId — poll with `get_container_update_check_status`. |
+| `get_container_update_check_status` | Read-only | Check the status of an update check started by `check_container_updates`. |
+| `cancel_container_update_check` | Mutating | Cancel a running update check. |
+| `update_container` | Mutating | Recreate a container with a newer image, preserving its configuration. Blocks until done. |
+| `batch_update_containers` | Mutating | Recreate several containers with their latest images. Blocks until done. |
 | `start_container` | Mutating | Start a stopped container. |
 | `stop_container` | Mutating | Stop a running container. |
 | `restart_container` | Mutating | Restart a container. |

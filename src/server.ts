@@ -14,10 +14,11 @@ import { registerRegistryTools } from './tools/registries.js';
 import { registerVulnerabilityTools } from './tools/vulnerabilities.js';
 import { registerGitTools } from './tools/git.js';
 import { registerScheduleTools } from './tools/schedules.js';
+import { registerUpdateTools } from './tools/updates.js';
 import { registerExecTools } from './tools/exec.js';
 
 export function buildServer(client: DockhandClient, config: Config): McpServer {
-  const server = new McpServer({ name: 'dockhand-mcp', version: '0.4.0' });
+  const server = new McpServer({ name: 'dockhand-mcp', version: '0.5.0' });
 
   registerEnvironmentTools(server, client);
   registerContainerTools(server, client, config.readonly);
@@ -25,6 +26,7 @@ export function buildServer(client: DockhandClient, config: Config): McpServer {
   registerVolumeTools(server, client, config.readonly);
   registerNetworkTools(server, client);
   registerStackTools(server, client, config.readonly);
+  registerUpdateTools(server, client, config.readonly);
 
   if (config.enableBackups) {
     registerBackupTools(server, client, config.readonly);
