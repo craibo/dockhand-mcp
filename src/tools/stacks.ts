@@ -23,7 +23,13 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
   );
 
   registerJobStatusTool(server, client, 'get_stack_deploy_status', 'Check the status of a stack deploy started by deploy_stack.');
-  registerJobStatusTool(server, client, 'get_stack_stop_status', 'Check the status of a stack stop started by stop_stack.');
+  registerJobStatusTool(server, client, 'get_stack_down_status', 'Check the status of a stack down started by down_stack.');
+  registerJobStatusTool(
+    server,
+    client,
+    'get_stack_lifecycle_status',
+    'Check the status of a stack start, stop or restart started by start_stack, stop_stack or restart_stack.'
+  );
 
   server.registerTool(
     'get_stack_env',
@@ -95,9 +101,9 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
   registerJobCancelTool(server, client, 'cancel_stack_deploy', 'Cancel a running stack deploy started by deploy_stack.');
 
   server.registerTool(
-    'stop_stack',
+    'down_stack',
     {
-      description: 'Stop (down) a Compose stack. Returns immediately with a jobId — call get_stack_stop_status with that jobId to check progress, and cancel_stack_stop to abort.',
+      description: 'Take a Compose stack down (docker compose down) — stops AND removes its containers, keeping compose files. Use stop_stack to stop containers without removing them. Returns immediately with a jobId — call get_stack_down_status with that jobId to check progress, and cancel_stack_down to abort.',
       inputSchema: z.object({
         environmentId: environmentIdSchema,
         stackName: z.string(),
@@ -117,7 +123,80 @@ export function registerStackTools(server: McpServer, client: DockhandClient, re
       }
     }
   );
-  registerJobCancelTool(server, client, 'cancel_stack_stop', 'Cancel a running stack stop started by stop_stack.');
+  registerJobCancelTool(server, client, 'cancel_stack_down', 'Cancel a running stack down started by down_stack.');
+
+  server.registerTool(
+    'start_stack',
+    {
+      description: 'Start a stopped Compose stack. Returns immediately with a jobId — call get_stack_lifecycle_status with that jobId to check progress, and cancel_stack_lifecycle to abort.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, stackName: z.string() })
+    },
+    async ({ environmentId, stackName }) => {
+      try {
+        const result = await client.postJob(
+          `/api/stacks/${encodeURIComponent(stackName)}/start`,
+          undefined,
+          { env: environmentId }
+        );
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'stop_stack',
+    {
+      description: 'Stop a Compose stack (docker compose stop) — containers are stopped but kept, so start_stack can resume them. Use down_stack to also remove the containers. Returns immediately with a jobId — call get_stack_lifecycle_status with that jobId to check progress, and cancel_stack_lifecycle to abort.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, stackName: z.string() })
+    },
+    async ({ environmentId, stackName }) => {
+      try {
+        const result = await client.postJob(
+          `/api/stacks/${encodeURIComponent(stackName)}/stop`,
+          undefined,
+          { env: environmentId }
+        );
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'restart_stack',
+    {
+      description: 'Restart a Compose stack. Returns immediately with a jobId — call get_stack_lifecycle_status with that jobId to check progress, and cancel_stack_lifecycle to abort.',
+      inputSchema: z.object({
+        environmentId: environmentIdSchema,
+        stackName: z.string(),
+        mode: z
+          .enum(['restart', 'ordered', 'recreate'])
+          .optional()
+          .describe('"restart" (default) restarts in place; "ordered" stops and starts honoring depends_on order, keeping the same containers; "recreate" recreates containers (new IDs, re-pulls images).')
+      })
+    },
+    async ({ environmentId, stackName, mode }) => {
+      try {
+        const result = await client.postJob(
+          `/api/stacks/${encodeURIComponent(stackName)}/restart`,
+          undefined,
+          { env: environmentId, mode }
+        );
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+  registerJobCancelTool(
+    server,
+    client,
+    'cancel_stack_lifecycle',
+    'Cancel a running stack start, stop or restart started by start_stack, stop_stack or restart_stack.'
+  );
 
   server.registerTool(
     'set_stack_secret',
