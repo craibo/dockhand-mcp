@@ -163,7 +163,50 @@ docker run -p 8787:8787 \
   dockhand-mcp
 ```
 
-These six domains intentionally wrap only a minimal slice of Dockhand's REST surface for each area (no user/role/registry/git-credential CRUD) — full CRUD for these domains is out of scope, consistent with the project's minimal, LLM-friendly tool surface.
+The extended domains intentionally wrap only a minimal slice of Dockhand's REST surface for each area (no user/role/registry/git-credential CRUD) — full CRUD for these domains is out of scope, consistent with the project's minimal, LLM-friendly tool surface.
+
+## Not yet implemented
+
+The tools above cover a deliberately minimal slice of Dockhand's REST API (checked against the Dockhand v1.0.51 OpenAPI spec, `static/openapi.json` in [Finsys/dockhand](https://github.com/Finsys/dockhand)). These are the known gaps, roughly in priority order. They are candidates, not commitments.
+
+**Stacks**
+- Deploy history (`GET /stacks/{name}/deploys`, `/{runId}`, `/{runId}/log`) — useful for debugging failed deploys
+- Read and write the compose file (`/stacks/{name}/compose`), validate a stack
+- Create, delete and adopt stacks; stack tags
+
+**Containers**
+- Create a container, `update-runtime`, release notes for an update (`/version-notes`)
+- Clear pending-update records, streaming batch update (`batch-update-stream`)
+- Auto-update settings per container (`/auto-update/{containerName}`)
+- File browser, compose view, live log and stats streams
+
+**Pruning and system**
+- Prune images, containers, networks, volumes, or all (`/prune/*`) — destructive, would need its own toggle
+- System info and disk usage (`/system`, `/system/disk`), per-environment disk warnings
+
+**Images, volumes, networks, registries**
+- Images: history, tag, push, load/export, scan a single image
+- Volumes: create, clone, browse, export
+- Networks: create, remove, connect, disconnect
+- Registries: search, tags, catalog, create/update/delete
+
+**Backups**
+- Restore and restore preview, destinations (list, test, verify), snapshot browse/diff/delete, config create/update/delete
+
+**Git**
+- Create/update/delete git stacks, repositories, credentials (would need secret redaction), env files, webhooks
+
+**Vulnerabilities**
+- Counts and export (`/vulnerabilities/count`, `/export`)
+
+**Other**
+- Environment management (create, update, test, delete), templates, schedule execution history and settings, `/batch`
+- User and role create/update/delete, MFA
+
+**Known caveats**
+- `MIN_DOCKHAND_VERSION` (1.0.41) has not been re-verified against the newest tools — `restart_stack` with `mode=ordered` needs Dockhand 1.0.46 or later. Dockhand does not expose its version over the API, so this is not enforced at runtime.
+- `exec_container` is bounded to about 30s on remote (Hawser/TCP) environments and takes an argv array, not a shell string.
+- There is no automated check that tool paths still exist in Dockhand's OpenAPI spec; a spec-drift test would catch renamed or removed endpoints.
 
 ## Development
 
