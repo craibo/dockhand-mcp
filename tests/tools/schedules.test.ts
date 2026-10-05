@@ -59,6 +59,54 @@ describe('registerScheduleTools — mutating tools when readonly=false', () => {
 });
 
 describe('registerScheduleTools — readonly=true', () => {
+  it('list_schedules strips execution details and logs by default', async () => {
+    const execution = { id: 1, status: 'success', details: { big: 'x'.repeat(100) }, logs: 'noisy' };
+    const client = makeClient({
+      get: vi.fn().mockResolvedValue({
+        schedules: [{ id: 1, type: 'image_prune', lastExecution: execution, recentExecutions: [execution] }]
+      })
+    });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerScheduleTools(server, client, false);
+
+    const result = await callTool(server, 'list_schedules', {});
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.schedules[0].lastExecution).toEqual({ id: 1, status: 'success' });
+    expect(parsed.schedules[0].recentExecutions).toEqual([{ id: 1, status: 'success' }]);
+  });
+
+  it('list_schedules keeps execution details when includeExecutionDetails is true', async () => {
+    const execution = { id: 1, status: 'success', details: { a: 1 }, logs: 'noisy' };
+    const client = makeClient({
+      get: vi.fn().mockResolvedValue({ schedules: [{ id: 1, lastExecution: execution, recentExecutions: [] }] })
+    });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerScheduleTools(server, client, false);
+
+    const result = await callTool(server, 'list_schedules', { includeExecutionDetails: true });
+    expect(JSON.parse(result.content[0].text).schedules[0].lastExecution).toEqual(execution);
+  });
+
+  it('list_schedules passes through unexpected response shapes untouched', async () => {
+    const client = makeClient({ get: vi.fn().mockResolvedValue([{ id: 1 }]) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerScheduleTools(server, client, false);
+
+    const result = await callTool(server, 'list_schedules', {});
+    expect(JSON.parse(result.content[0].text)).toEqual([{ id: 1 }]);
+  });
+
+  it('toggle_schedule accepts the deploy_log_reconcile schedule type', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerScheduleTools(server, makeClient(), false);
+    // @ts-expect-error accessing internal registry for direct unit testing
+    const schema = server._registeredTools['toggle_schedule'].inputSchema;
+    for (const scheduleType of ['deploy_log_reconcile', 'repo_prune', 'repo_check', 'repo_verify']) {
+      expect(schema.safeParse({ scheduleType, scheduleId: 1 }).success).toBe(true);
+    }
+    expect(schema.safeParse({ scheduleType: 'bogus', scheduleId: 1 }).success).toBe(false);
+  });
+
   it('does not register mutating tools but keeps list_schedules', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerScheduleTools(server, makeClient(), true);
