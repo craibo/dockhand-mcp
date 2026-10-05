@@ -48,30 +48,54 @@ describe('registerStackTools', () => {
     expect(result.content[0].text).toContain('job-1');
   });
 
-  it('stop_stack posts removeVolumes via postJob', async () => {
+  it('down_stack posts removeVolumes via postJob', async () => {
     const client = makeClient({ postJob: vi.fn().mockResolvedValue({ jobId: 'job-2' }) });
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerStackTools(server, client, false);
 
-    await callTool(server, 'stop_stack', { environmentId: 5, stackName: 'my-app', removeVolumes: true });
+    await callTool(server, 'down_stack', { environmentId: 5, stackName: 'my-app', removeVolumes: true });
     expect(client.postJob).toHaveBeenCalledWith('/api/stacks/my-app/down', { removeVolumes: true }, { env: 5 });
   });
 
-  it('omits deploy_stack and stop_stack when readonly', () => {
+  it('start_stack and stop_stack post to their own endpoints via postJob', async () => {
+    const client = makeClient({ postJob: vi.fn().mockResolvedValue({ jobId: 'job-3' }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    await callTool(server, 'start_stack', { environmentId: 5, stackName: 'my app' });
+    expect(client.postJob).toHaveBeenLastCalledWith('/api/stacks/my%20app/start', undefined, { env: 5 });
+    await callTool(server, 'stop_stack', { environmentId: 5, stackName: 'my-app' });
+    expect(client.postJob).toHaveBeenLastCalledWith('/api/stacks/my-app/stop', undefined, { env: 5 });
+  });
+
+  it('restart_stack passes mode as a query param via postJob', async () => {
+    const client = makeClient({ postJob: vi.fn().mockResolvedValue({ jobId: 'job-4' }) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerStackTools(server, client, false);
+
+    await callTool(server, 'restart_stack', { environmentId: 5, stackName: 'my-app', mode: 'ordered' });
+    expect(client.postJob).toHaveBeenCalledWith('/api/stacks/my-app/restart', undefined, { env: 5, mode: 'ordered' });
+  });
+
+  it('omits mutating stack tools when readonly', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerStackTools(server, makeClient(), true);
     expect(hasTool(server, 'deploy_stack')).toBe(false);
-    expect(hasTool(server, 'stop_stack')).toBe(false);
+    for (const name of ['down_stack', 'start_stack', 'stop_stack', 'restart_stack']) {
+      expect(hasTool(server, name)).toBe(false);
+    }
     expect(hasTool(server, 'list_stacks')).toBe(true);
   });
 
-  it('registers status and cancel tools for deploy_stack and stop_stack', () => {
+  it('registers status and cancel tools for deploy, down and lifecycle jobs', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerStackTools(server, makeClient(), false);
     expect(hasTool(server, 'get_stack_deploy_status')).toBe(true);
     expect(hasTool(server, 'cancel_stack_deploy')).toBe(true);
-    expect(hasTool(server, 'get_stack_stop_status')).toBe(true);
-    expect(hasTool(server, 'cancel_stack_stop')).toBe(true);
+    expect(hasTool(server, 'get_stack_down_status')).toBe(true);
+    expect(hasTool(server, 'cancel_stack_down')).toBe(true);
+    expect(hasTool(server, 'get_stack_lifecycle_status')).toBe(true);
+    expect(hasTool(server, 'cancel_stack_lifecycle')).toBe(true);
   });
 
   it('get_stack_deploy_status calls client.get on the jobs endpoint', async () => {
@@ -96,9 +120,11 @@ describe('registerStackTools', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     registerStackTools(server, makeClient(), true);
     expect(hasTool(server, 'cancel_stack_deploy')).toBe(false);
-    expect(hasTool(server, 'cancel_stack_stop')).toBe(false);
+    expect(hasTool(server, 'cancel_stack_down')).toBe(false);
+    expect(hasTool(server, 'cancel_stack_lifecycle')).toBe(false);
     expect(hasTool(server, 'get_stack_deploy_status')).toBe(true);
-    expect(hasTool(server, 'get_stack_stop_status')).toBe(true);
+    expect(hasTool(server, 'get_stack_down_status')).toBe(true);
+    expect(hasTool(server, 'get_stack_lifecycle_status')).toBe(true);
   });
 
   it('get_stack_env passes environmentId and encodes stack name', async () => {

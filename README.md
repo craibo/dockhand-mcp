@@ -101,9 +101,14 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `deploy_stack` | Mutating | Deploy (up) a Compose stack. Returns immediately with a jobId — poll with `get_stack_deploy_status`. |
 | `get_stack_deploy_status` | Read-only | Check the status of a stack deploy started by `deploy_stack`. |
 | `cancel_stack_deploy` | Mutating | Cancel a running stack deploy started by `deploy_stack`. |
-| `stop_stack` | Mutating | Stop (down) a Compose stack. Returns immediately with a jobId — poll with `get_stack_stop_status`. |
-| `get_stack_stop_status` | Read-only | Check the status of a stack stop started by `stop_stack`. |
-| `cancel_stack_stop` | Mutating | Cancel a running stack stop started by `stop_stack`. |
+| `down_stack` | Mutating | Take a Compose stack down (`docker compose down`) — stops and removes its containers. Returns immediately with a jobId — poll with `get_stack_down_status`. |
+| `get_stack_down_status` | Read-only | Check the status of a stack down started by `down_stack`. |
+| `cancel_stack_down` | Mutating | Cancel a running stack down started by `down_stack`. |
+| `start_stack` | Mutating | Start a stopped Compose stack. Returns immediately with a jobId — poll with `get_stack_lifecycle_status`. |
+| `stop_stack` | Mutating | Stop a Compose stack (`docker compose stop`), keeping its containers. Returns a jobId — poll with `get_stack_lifecycle_status`. |
+| `restart_stack` | Mutating | Restart a Compose stack, optionally with `mode` `restart` (default), `ordered` or `recreate`. Returns a jobId — poll with `get_stack_lifecycle_status`. |
+| `get_stack_lifecycle_status` | Read-only | Check the status of a stack start, stop or restart. |
+| `cancel_stack_lifecycle` | Mutating | Cancel a running stack start, stop or restart. |
 | `set_stack_secret` | Mutating | Save secret environment variables for a stack. Pass value `"***"` for a variable to keep its existing secret unchanged. |
 | `set_stack_env_file` | Mutating | Overwrite the raw `.env` file content for a stack. Replaces the entire file; empty content deletes it. |
 

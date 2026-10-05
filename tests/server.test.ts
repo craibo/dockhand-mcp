@@ -58,16 +58,21 @@ describe('buildServer — core v1 tools', () => {
         'deploy_stack',
         'get_stack_deploy_status',
         'cancel_stack_deploy',
+        'down_stack',
+        'get_stack_down_status',
+        'cancel_stack_down',
+        'start_stack',
         'stop_stack',
-        'get_stack_stop_status',
-        'cancel_stack_stop',
+        'restart_stack',
+        'get_stack_lifecycle_status',
+        'cancel_stack_lifecycle',
         'get_stack_env',
         'set_stack_secret',
         'get_stack_env_file',
         'set_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(27);
+    expect(names).toHaveLength(32);
   });
 
   it('omits mutating tools when readonly=true', () => {
@@ -85,12 +90,13 @@ describe('buildServer — core v1 tools', () => {
         'list_networks',
         'list_stacks',
         'get_stack_deploy_status',
-        'get_stack_stop_status',
+        'get_stack_down_status',
+        'get_stack_lifecycle_status',
         'get_stack_env',
         'get_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(13);
+    expect(names).toHaveLength(14);
   });
 });
 
