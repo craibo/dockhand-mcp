@@ -13,6 +13,7 @@ export interface Config {
   enableVulnerabilities: boolean;
   enableGit: boolean;
   enableSchedules: boolean;
+  enableExec: boolean;
 }
 
 export class ConfigError extends Error {
@@ -80,6 +81,7 @@ export function loadConfig(
   const enableVulnerabilities = env.DOCKHAND_MCP_ENABLE_VULNERABILITIES === 'true';
   const enableGit = env.DOCKHAND_MCP_ENABLE_GIT === 'true';
   const enableSchedules = env.DOCKHAND_MCP_ENABLE_SCHEDULES === 'true';
+  const enableExec = env.DOCKHAND_MCP_ENABLE_EXEC === 'true';
 
   return {
     dockhandUrl,
@@ -93,6 +95,7 @@ export function loadConfig(
     enableRegistries,
     enableVulnerabilities,
     enableGit,
-    enableSchedules
+    enableSchedules,
+    enableExec
   };
 }

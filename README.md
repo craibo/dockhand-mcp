@@ -20,6 +20,7 @@ This is a standalone service — it does not modify Dockhand itself, and calls D
 | `DOCKHAND_MCP_ENABLE_VULNERABILITIES` | no (default `false`) | Set `true` to register vulnerability listing and scan tools |
 | `DOCKHAND_MCP_ENABLE_GIT` | no (default `false`) | Set `true` to register git-backed stack tools |
 | `DOCKHAND_MCP_ENABLE_SCHEDULES` | no (default `false`) | Set `true` to register schedule tools |
+| `DOCKHAND_MCP_ENABLE_EXEC` | no (default `false`) | Set `true` to register the `exec_container` tool (runs commands inside containers — effectively remote code execution, so off by default) |
 | `PORT` | no (default `8787`) | Port the MCP endpoint listens on |
 
 ## Running
@@ -89,9 +90,14 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | `list_stacks` | Read-only | List Compose stacks in a Dockhand environment. |
 | `get_stack_env` | Read-only | Get all environment variables for a stack (merged view of the `.env` file and stored secrets). Secret values are masked as `***`. |
 | `get_stack_env_file` | Read-only | Get the raw `.env` file content for a stack, as-is (comments and formatting preserved). Non-secret variables only. |
+| `get_container_stats` | Read-only | Get a one-shot CPU, memory, network and block-IO stats snapshot for a container. |
+| `get_container_top` | Read-only | List the processes running inside a container. |
 | `start_container` | Mutating | Start a stopped container. |
 | `stop_container` | Mutating | Stop a running container. |
 | `restart_container` | Mutating | Restart a container. |
+| `pause_container` | Mutating | Pause all processes in a running container. |
+| `unpause_container` | Mutating | Resume all processes in a paused container. |
+| `rename_container` | Mutating | Rename a container (also updates its auto-update schedule). |
 | `remove_container` | Mutating | Remove (delete) a container. |
 | `pull_image` | Mutating | Pull an image from a registry. Returns immediately with a jobId — poll with `get_image_pull_status`. |
 | `get_image_pull_status` | Read-only | Check the status of an image pull started by `pull_image`. |
@@ -137,6 +143,7 @@ Mutating tools are also disabled whenever `DOCKHAND_MCP_READONLY=true`, regardle
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `list_schedules` | Read-only | List all active Dockhand schedules (container auto-updates, git stack syncs, backups, and system jobs). |
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `run_schedule` | Mutating | Manually trigger a schedule to run now. |
 | Schedules | `DOCKHAND_MCP_ENABLE_SCHEDULES` | disabled by default | `toggle_schedule` | Mutating | Enable or disable a schedule. Flips its current enabled state — check the returned `enabled` field to see the new state. |
+| Container exec | `DOCKHAND_MCP_ENABLE_EXEC` | disabled by default | `exec_container` | Mutating | Run a short, non-interactive command in a running container and return stdout, stderr and exit code. Never registered when `DOCKHAND_MCP_READONLY=true`. |
 
 To enable a domain, set its toggle to `true` in the sidecar's environment (see [Configuration](#configuration)), e.g.:
 

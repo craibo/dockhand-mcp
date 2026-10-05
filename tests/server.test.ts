@@ -29,7 +29,8 @@ const baseConfig: Config = {
   enableRegistries: false,
   enableVulnerabilities: false,
   enableGit: false,
-  enableSchedules: false
+  enableSchedules: false,
+  enableExec: false
 };
 
 describe('buildServer — core v1 tools', () => {
@@ -42,9 +43,14 @@ describe('buildServer — core v1 tools', () => {
         'list_containers',
         'get_container',
         'get_container_logs',
+        'get_container_stats',
+        'get_container_top',
         'start_container',
         'stop_container',
         'restart_container',
+        'pause_container',
+        'unpause_container',
+        'rename_container',
         'remove_container',
         'list_images',
         'pull_image',
@@ -72,7 +78,7 @@ describe('buildServer — core v1 tools', () => {
         'set_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(32);
+    expect(names).toHaveLength(37);
   });
 
   it('omits mutating tools when readonly=true', () => {
@@ -84,6 +90,8 @@ describe('buildServer — core v1 tools', () => {
         'list_containers',
         'get_container',
         'get_container_logs',
+        'get_container_stats',
+        'get_container_top',
         'list_images',
         'get_image_pull_status',
         'list_volumes',
@@ -96,7 +104,7 @@ describe('buildServer — core v1 tools', () => {
         'get_stack_env_file'
       ])
     );
-    expect(names).toHaveLength(14);
+    expect(names).toHaveLength(16);
   });
 });
 
@@ -117,7 +125,8 @@ const newDomainTools = [
   'get_git_deploy_status',
   'cancel_git_deploy',
   'list_schedules',
-  'run_schedule'
+  'run_schedule',
+  'exec_container'
 ];
 
 describe('buildServer — default config', () => {
@@ -145,7 +154,8 @@ describe('buildServer — all toggles enabled', () => {
       enableRegistries: true,
       enableVulnerabilities: true,
       enableGit: true,
-      enableSchedules: true
+      enableSchedules: true,
+      enableExec: true
     });
     for (const name of newDomainTools) {
       expect(hasTool(server, name)).toBe(true);
@@ -159,6 +169,16 @@ describe('buildServer — per-domain toggle independence', () => {
     expect(hasTool(server, 'list_backup_configs')).toBe(true);
     expect(hasTool(server, 'list_users')).toBe(false);
     expect(hasTool(server, 'list_registries')).toBe(false);
+  });
+});
+
+describe('buildServer — exec toggle', () => {
+  it('registers exec_container only when enableExec=true and not readonly', () => {
+    expect(hasTool(buildServer(makeClient(), baseConfig), 'exec_container')).toBe(false);
+    expect(hasTool(buildServer(makeClient(), { ...baseConfig, enableExec: true }), 'exec_container')).toBe(true);
+    expect(
+      hasTool(buildServer(makeClient(), { ...baseConfig, enableExec: true, readonly: true }), 'exec_container')
+    ).toBe(false);
   });
 });
 
