@@ -22,6 +22,7 @@ services:
       # DOCKHAND_MCP_ENABLE_VULNERABILITIES: "true"
       # DOCKHAND_MCP_ENABLE_GIT: "true"
       # DOCKHAND_MCP_ENABLE_SCHEDULES: "true"
+      # DOCKHAND_MCP_ENABLE_EXEC: "true"
     secrets:
       - dockhand_api_token
     ports:

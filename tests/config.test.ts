@@ -21,7 +21,8 @@ describe('loadConfig', () => {
       enableRegistries: false,
       enableVulnerabilities: false,
       enableGit: false,
-      enableSchedules: false
+      enableSchedules: false,
+      enableExec: false
     });
   });
 
@@ -33,6 +34,7 @@ describe('loadConfig', () => {
     expect(config.enableVulnerabilities).toBe(false);
     expect(config.enableGit).toBe(false);
     expect(config.enableSchedules).toBe(false);
+    expect(config.enableExec).toBe(false);
   });
 
   it('parses each DOCKHAND_MCP_ENABLE_* toggle independently', () => {
@@ -47,6 +49,12 @@ describe('loadConfig', () => {
     expect(config.enableRegistries).toBe(false);
     expect(config.enableGit).toBe(false);
     expect(config.enableSchedules).toBe(false);
+    expect(config.enableExec).toBe(false);
+  });
+
+  it('parses DOCKHAND_MCP_ENABLE_EXEC=true', () => {
+    const config = loadConfig({ ...baseEnv, DOCKHAND_MCP_ENABLE_EXEC: 'true' } as NodeJS.ProcessEnv);
+    expect(config.enableExec).toBe(true);
   });
 
   it('parses DOCKHAND_MCP_READONLY=true', () => {

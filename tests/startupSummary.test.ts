@@ -14,7 +14,8 @@ const baseConfig: Config = {
   enableRegistries: false,
   enableVulnerabilities: false,
   enableGit: false,
-  enableSchedules: false
+  enableSchedules: false,
+  enableExec: false
 };
 
 describe('logStartupSummary', () => {
@@ -53,6 +54,7 @@ describe('logStartupSummary', () => {
     expect(output).toContain('Vulnerabilities: disabled');
     expect(output).toContain('Git deploy: disabled');
     expect(output).toContain('Schedules: disabled');
+    expect(output).toContain('Container exec: disabled');
   });
 
   it('reflects enabled domains individually', () => {
@@ -70,6 +72,7 @@ describe('logStartupSummary', () => {
     expect(output).toContain('Registries: disabled');
     expect(output).toContain('Vulnerabilities: disabled');
     expect(output).toContain('Schedules: disabled');
+    expect(output).toContain('Container exec: disabled');
   });
 
   it('reflects all domains enabled', () => {
@@ -82,7 +85,8 @@ describe('logStartupSummary', () => {
         enableRegistries: true,
         enableVulnerabilities: true,
         enableGit: true,
-        enableSchedules: true
+        enableSchedules: true,
+        enableExec: true
       },
       true,
       { log }

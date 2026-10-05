@@ -21,7 +21,8 @@ export function logStartupSummary(
     { label: 'Registries', enabled: config.enableRegistries },
     { label: 'Vulnerabilities', enabled: config.enableVulnerabilities },
     { label: 'Git deploy', enabled: config.enableGit },
-    { label: 'Schedules', enabled: config.enableSchedules }
+    { label: 'Schedules', enabled: config.enableSchedules },
+    { label: 'Container exec', enabled: config.enableExec }
   ];
 
   logger.log('dockhand-mcp startup summary:');

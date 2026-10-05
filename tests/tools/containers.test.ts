@@ -53,6 +53,50 @@ describe('registerContainerTools — read-only tools', () => {
   });
 });
 
+describe('registerContainerTools — stats and top', () => {
+  it('get_container_stats and get_container_top call their endpoints', async () => {
+    const client = makeClient({ get: vi.fn().mockResolvedValue({}) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerContainerTools(server, client, true);
+
+    await callTool(server, 'get_container_stats', { environmentId: 5, containerId: 'c 1' });
+    expect(client.get).toHaveBeenLastCalledWith('/api/containers/c%201/stats', { env: 5 });
+    await callTool(server, 'get_container_top', { environmentId: 5, containerId: 'c1' });
+    expect(client.get).toHaveBeenLastCalledWith('/api/containers/c1/top', { env: 5 });
+  });
+});
+
+describe('registerContainerTools — pause, unpause, rename', () => {
+  it('pause_container and unpause_container post to their endpoints', async () => {
+    const client = makeClient({ post: vi.fn().mockResolvedValue({}) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerContainerTools(server, client, false);
+
+    await callTool(server, 'pause_container', { environmentId: 5, containerId: 'c1' });
+    expect(client.post).toHaveBeenLastCalledWith('/api/containers/c1/pause', undefined, { env: 5 });
+    await callTool(server, 'unpause_container', { environmentId: 5, containerId: 'c1' });
+    expect(client.post).toHaveBeenLastCalledWith('/api/containers/c1/unpause', undefined, { env: 5 });
+  });
+
+  it('rename_container posts the new name', async () => {
+    const client = makeClient({ post: vi.fn().mockResolvedValue({}) });
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerContainerTools(server, client, false);
+
+    await callTool(server, 'rename_container', { environmentId: 5, containerId: 'c1', name: 'web-2' });
+    expect(client.post).toHaveBeenCalledWith('/api/containers/c1/rename', { name: 'web-2' }, { env: 5 });
+  });
+
+  it('omits pause, unpause and rename when readonly', () => {
+    const server = new McpServer({ name: 'test', version: '0.0.0' });
+    registerContainerTools(server, makeClient(), true);
+    for (const name of ['pause_container', 'unpause_container', 'rename_container']) {
+      expect(hasTool(server, name)).toBe(false);
+    }
+    expect(hasTool(server, 'get_container_stats')).toBe(true);
+  });
+});
+
 describe('registerContainerTools — mutating tools when readonly=false', () => {
   it('registers start_container, stop_container, restart_container, remove_container', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });

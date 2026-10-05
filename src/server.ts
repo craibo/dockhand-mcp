@@ -14,6 +14,7 @@ import { registerRegistryTools } from './tools/registries.js';
 import { registerVulnerabilityTools } from './tools/vulnerabilities.js';
 import { registerGitTools } from './tools/git.js';
 import { registerScheduleTools } from './tools/schedules.js';
+import { registerExecTools } from './tools/exec.js';
 
 export function buildServer(client: DockhandClient, config: Config): McpServer {
   const server = new McpServer({ name: 'dockhand-mcp', version: '0.4.0' });
@@ -42,6 +43,9 @@ export function buildServer(client: DockhandClient, config: Config): McpServer {
   }
   if (config.enableSchedules) {
     registerScheduleTools(server, client, config.readonly);
+  }
+  if (config.enableExec) {
+    registerExecTools(server, client, config.readonly);
   }
 
   return server;

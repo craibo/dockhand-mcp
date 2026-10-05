@@ -45,6 +45,42 @@ export function registerContainerTools(server: McpServer, client: DockhandClient
   );
 
   server.registerTool(
+    'get_container_stats',
+    {
+      description: 'Get a one-shot CPU, memory, network and block-IO stats snapshot for a container.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, containerId: z.string() })
+    },
+    async ({ environmentId, containerId }) => {
+      try {
+        const stats = await client.get(`/api/containers/${encodeURIComponent(containerId)}/stats`, {
+          env: environmentId
+        });
+        return toTextResult(stats);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'get_container_top',
+    {
+      description: 'List the processes running inside a container.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, containerId: z.string() })
+    },
+    async ({ environmentId, containerId }) => {
+      try {
+        const processes = await client.get(`/api/containers/${encodeURIComponent(containerId)}/top`, {
+          env: environmentId
+        });
+        return toTextResult(processes);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
     'get_container_logs',
     {
       description: 'Get recent logs for a container.',
@@ -120,6 +156,64 @@ export function registerContainerTools(server: McpServer, client: DockhandClient
     async ({ environmentId, containerId }) => {
       try {
         const result = await client.post(`/api/containers/${encodeURIComponent(containerId)}/restart`, undefined, {
+          env: environmentId
+        });
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'pause_container',
+    {
+      description: 'Pause all processes in a running container.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, containerId: z.string() })
+    },
+    async ({ environmentId, containerId }) => {
+      try {
+        const result = await client.post(`/api/containers/${encodeURIComponent(containerId)}/pause`, undefined, {
+          env: environmentId
+        });
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'unpause_container',
+    {
+      description: 'Resume all processes in a paused container.',
+      inputSchema: z.object({ environmentId: environmentIdSchema, containerId: z.string() })
+    },
+    async ({ environmentId, containerId }) => {
+      try {
+        const result = await client.post(`/api/containers/${encodeURIComponent(containerId)}/unpause`, undefined, {
+          env: environmentId
+        });
+        return toTextResult(result);
+      } catch (error) {
+        return toErrorResult(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'rename_container',
+    {
+      description: 'Rename a container. Also updates any auto-update schedule associated with it.',
+      inputSchema: z.object({
+        environmentId: environmentIdSchema,
+        containerId: z.string(),
+        name: z.string().min(1).describe('New container name')
+      })
+    },
+    async ({ environmentId, containerId, name }) => {
+      try {
+        const result = await client.post(`/api/containers/${encodeURIComponent(containerId)}/rename`, { name }, {
           env: environmentId
         });
         return toTextResult(result);
