@@ -100,6 +100,27 @@ describe('redactSecrets', () => {
     expect(redactSecrets(input)).toEqual({ secretCount: 3, hasSecretConfig: true });
   });
 
+  it('masks the value of every KEY=value entry in a container Env array', () => {
+    const input = {
+      Id: 'c1',
+      Config: { Env: ['DB_PASSWORD=hunter2', 'AWS_ACCESS_KEY_ID=AKIAEXAMPLE', 'DATABASE_URL=mysql://u:p@h/db', 'EMPTY=', 'NOEQUALS'] }
+    };
+    const result = redactSecrets(input) as typeof input;
+    expect(result.Config.Env).toEqual([
+      'DB_PASSWORD=[REDACTED]',
+      'AWS_ACCESS_KEY_ID=[REDACTED]',
+      'DATABASE_URL=[REDACTED]',
+      'EMPTY=[REDACTED]',
+      'NOEQUALS'
+    ]);
+    expect(JSON.stringify(result)).not.toMatch(/hunter2|AKIAEXAMPLE|u:p@h/);
+  });
+
+  it('redacts Env arrays at any depth, including inside arrays', () => {
+    const input = [{ Config: { Env: ['A=secret'] } }];
+    expect(redactSecrets(input)).toEqual([{ Config: { Env: ['A=[REDACTED]'] } }]);
+  });
+
   it('handles primitives and null without throwing', () => {
     expect(redactSecrets('a string')).toBe('a string');
     expect(redactSecrets(42)).toBe(42);
